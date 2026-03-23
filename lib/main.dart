@@ -4,8 +4,12 @@ import 'package:floradex/screens/researcher_profile.dart';
 import 'package:floradex/screens/scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:floradex/theme/app_theme.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await dotenv.load(fileName: ".env");
   runApp(const FloraDexApp());
 }
 

@@ -47,3 +47,4 @@ app.*.map.json
 #Custom
 prompts/
 ui_images/
+.env
