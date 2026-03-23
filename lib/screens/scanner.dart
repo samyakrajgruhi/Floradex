@@ -1,10 +1,71 @@
-// ignore_for_file: unused_local_variable
+// ignore_for_file: unused_field, unused_local_variable
 
 import 'package:floradex/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:camera/camera.dart';
 
-class ScannerPage extends StatelessWidget {
+class ScannerPage extends StatefulWidget {
   const ScannerPage({Key? key}) : super(key: key);
+
+  @override
+  State<ScannerPage> createState() => _ScannerPageState();
+}
+
+class _ScannerPageState extends State<ScannerPage> {
+  CameraController? _cameraController;
+  bool _isCameraInitialized = false;
+
+  Future<void> _setupCamera() async {
+    final cameras = await availableCameras();
+
+    if (cameras.isNotEmpty) {
+      final backCamera = cameras.first;
+
+      _cameraController = CameraController(
+        backCamera,
+        ResolutionPreset.high,
+        enableAudio: false,
+      );
+
+      await _cameraController!.initialize();
+      if (mounted) {
+        setState(() {
+          _isCameraInitialized = true;
+        });
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _setupCamera();
+  }
+
+  @override
+  void dispose() {
+    _cameraController?.dispose();
+    super.dispose();
+  }
+
+  XFile? _capturedImage;
+
+  Future<void> _openCamera() async {
+    if (!_isCameraInitialized || _cameraController == null) {
+      return null;
+    }
+
+    try {
+      final XFile? photo = await _cameraController?.takePicture();
+      print('Image picked at: ${photo?.path}');
+      setState(() {
+        _capturedImage = photo;
+      });
+    } catch (e) {
+      print('Error taking picture :$e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,28 +118,15 @@ class ScannerPage extends StatelessWidget {
                         child: Container(
                           margin: const EdgeInsets.all(4), // Inner gap
                           color: const Color(0xFF1A1A1A),
-                          child: Center(
-                            // Circular lens aperture cutout
-                            child: Container(
-                              width: 280,
-                              height: 280,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.black,
-                                border: Border.all(
-                                  color: const Color(0xFF2A2A2A),
-                                  width: 40, // Thick lens barrel
+                          child: _isCameraInitialized
+                              ? CameraPreview(_cameraController!)
+                              : Center(
+                                  child: Icon(
+                                    Icons.energy_savings_leaf,
+                                    color: Color(0xFF007523),
+                                    size: 64,
+                                  ),
                                 ),
-                              ),
-                              child: const Center(
-                                child: Icon(
-                                  Icons.energy_savings_leaf,
-                                  color: Color(0xFF007523),
-                                  size: 64,
-                                ),
-                              ),
-                            ),
-                          ),
                         ),
                       ),
 
@@ -140,16 +188,17 @@ class ScannerPage extends StatelessWidget {
                       ),
 
                       // SNAP Button Container (Bottom Center)
-                      Positioned(
-                        bottom: 32,
-                        left: 0,
-                        right: 0,
-                        child: Center(child: _SnapButton()),
-                      ),
                     ],
                   ),
                 ),
               ),
+            ),
+            const SizedBox(height: 32),
+            Positioned(
+              bottom: 32,
+              left: 0,
+              right: 0,
+              child: Center(child: _SnapButton(onTap: _openCamera)),
             ),
             const SizedBox(height: 32),
           ],
@@ -160,12 +209,14 @@ class ScannerPage extends StatelessWidget {
 }
 
 class _SnapButton extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _SnapButton({required this.onTap});
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        // TODO: Handle Image Capture
-      },
+      onTap: onTap,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
