@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:floradex/services/plant_info.dart';
 
 class ScannerPage extends StatefulWidget {
   const ScannerPage({Key? key}) : super(key: key);
@@ -20,6 +21,8 @@ class _ScannerPageState extends State<ScannerPage> {
   bool _isCameraInitialized = false;
 
   String? _identifiedPlantName;
+  Map<String, dynamic>? _plantDetails;
+
   bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
 
@@ -113,8 +116,16 @@ class _ScannerPageState extends State<ScannerPage> {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final Map<String, dynamic> data = jsonDecode(response.body);
         if (data['suggestions'] != null && data['suggestions'].isNotEmpty) {
+          final bestMatchName = data['suggestions'][0]['plant_name'];
           setState(() {
-            _identifiedPlantName = data['suggestions'][0]['plant_name'];
+            _identifiedPlantName = bestMatchName;
+          });
+
+          final infoService = PlantInfoService();
+          final details = await infoService.getPlantDetails(bestMatchName);
+
+          setState(() {
+            _plantDetails = details;
           });
         } else {
           setState(() => _identifiedPlantName = "No plant found!");
@@ -259,24 +270,125 @@ class _ScannerPageState extends State<ScannerPage> {
               ),
             ),
             const SizedBox(height: 32),
-                        // --- NEW UI UPDATES BELOW VIEWFINDER ---
+            // --- NEW UI UPDATES BELOW VIEWFINDER ---
             const SizedBox(height: 16),
-            
+
             // 1. Temporary Text / Loading Indicator
             if (_isLoading)
               const CircularProgressIndicator(color: AppTheme.primary)
             else if (_identifiedPlantName != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text(
-                  '🌿 $_identifiedPlantName',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.greenAccent,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Space Grotesk',
-                  ),
+                child: Column(
+                  children: [
+                    Text(
+                      '🌿 ${_plantDetails?['common_name'] ?? _identifiedPlantName}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.greenAccent,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Space Grotesk',
+                      ),
+                    ),
+
+                                        // Show LLM details once they arrive!
+                    if (_plantDetails != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        _plantDetails!['scientific_name'] ?? '',
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Environment Tag
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white10,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.greenAccent.withOpacity(0.5),
+                          ),
+                        ),
+                        child: Text(
+                          _plantDetails!['environment'] ?? 'UNKNOWN ENV',
+                          style: const TextStyle(
+                            color: Colors.greenAccent,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+                      
+                      // Origin & Rarity
+                      Text(
+                        '📍 ${_plantDetails!['origin'] ?? 'Unknown'}   •   ⭐ ${_plantDetails!['rarity'] ?? '?'}/5',
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 16),
+
+                      // Medical Uses
+                      const Text(
+                        'MEDICAL USES',
+                        style: TextStyle(color: AppTheme.primary, fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        (_plantDetails!['medical_uses'] is List)
+                            ? '• ' + (_plantDetails!['medical_uses'] as List).join('\n• ')
+                            : _plantDetails!['medical_uses']?.toString() ?? '',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+                      
+                      const SizedBox(height: 12),
+
+                      // Edibility
+                      const Text(
+                        'EDIBILITY',
+                        style: TextStyle(color: AppTheme.primary, fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _plantDetails!['edibility']?.toString() ?? '',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Facts
+                      const Text(
+                        'FACTS',
+                        style: TextStyle(color: AppTheme.primary, fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        (_plantDetails!['facts'] is List)
+                            ? '• ' + (_plantDetails!['facts'] as List).join('\n• ')
+                            : _plantDetails!['facts']?.toString() ?? '',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               )
             else
@@ -296,12 +408,11 @@ class _ScannerPageState extends State<ScannerPage> {
                   iconSize: 32,
                 ),
                 const SizedBox(width: 24),
-                
+
                 // Snap Button
                 _SnapButton(onTap: _openCamera),
-                
-                // Invisible box to balance out the centering of the Row
-                const SizedBox(width: 56), 
+
+                const SizedBox(width: 56),
               ],
             ),
             const SizedBox(height: 32),
