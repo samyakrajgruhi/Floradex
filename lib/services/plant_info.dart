@@ -1,71 +1,90 @@
 import 'dart:convert';
-
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart';
 import 'package:langchain/langchain.dart';
-import 'package:langchain_openai/langchain_openai.dart';
+import 'package:langchain_google/langchain_google.dart';
 
 class PlantInfoService {
-  Future<Map<String, dynamic>?> getPlantDetails(String plantName) async {
-    final apiKey = dotenv.env['GROQ_API_KEY'];
+  Future<Map<String, dynamic>?> analyzePlantImage(XFile photo) async {
+    final bytes = await photo.readAsBytes();
+    final base64Image = base64Encode(bytes);
+    final apiKey = dotenv.env['PLANT_ID_API_KEY'];
+
     if (apiKey == null) {
-      print('GROQ API Key not found');
+      print('PLANT_ID_API_KEY not found'); // close loading
       return null;
     }
 
-    final model = ChatOpenAI(
+    final url = Uri.parse('https://api.plant.id/v2/identify');
+    final headers = {'Content-Type': 'application/json', 'Api-Key': apiKey};
+    final body = jsonEncode({
+      'images': [base64Image],
+    });
+    print("Sending image to Plant.id");
+
+    final response = await http.post(url, headers: headers, body: body);
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      print("Plant.id API Error :${response.statusCode}");
+      return null;
+    }
+
+    final Map<String, dynamic> data = jsonDecode(response.body);
+
+    if (data['suggestions'] == null || data['suggestions'].isEmpty) {
+      print("No plant suggestions found.");
+      return null;
+    }
+
+    final bestMatchName = data['suggestions'][0]['plant_name'];
+    print("Plant Name : $bestMatchName .");
+
+    return await getPlantDetailsFromGemini(bestMatchName);
+  }
+
+  Future<Map<String, dynamic>?> getPlantDetailsFromGemini(
+    String plantName,
+  ) async {
+    final apiKey = dotenv.env['GOOGLE_API_KEY'];
+    if (apiKey == null) {
+      print('GOOGLE API Key not found');
+      return null;
+    }
+
+    final model = ChatGoogleGenerativeAI(
       apiKey: apiKey,
-      baseUrl: "https://api.groq.com/openai/v1",
-      defaultOptions: ChatOpenAIOptions(
-        model: 'llama-3.3-70b-versatile',
+      defaultOptions: const ChatGoogleGenerativeAIOptions(
+        model: 'gemini-2.5-flash',
         temperature: 0.2,
-        responseFormat: ChatOpenAIResponseFormatJsonObject(),
       ),
     );
-    /* 
-    '''
-    You are an expert botanist and plant encyclopedia. 
-    When given a scientific plant name, you provide accurate, 
-    concise and well-structured plant information.
-    Always respond in the exact format given to you. 
-    Do not add extra information outside the format.
-
-    Give the following information on plant: "{plant_name}" 
-    You MUST respond ONLY with a valid JSON object matching this structure exactly:
-    {{
-      "common_name" : "The most common name used for the plant",
-      "scientific_name" : "Plants scientific name",
-      "rarity" : "Rarity of the plant out of 5",
-      "environment" : "In which environment is it found the most give in format like 'ARID/SUNNY'.",
-      "medical_uses" : "List of 3 medical uses of the plant in simple language.",
-      "edibility" : "If edible then give info on how its used in general in short, if not then or poisonous then mention that",
-      "origin" : "origin of the plant",
-      "facts" : "2 interesting/quick facts about the plant"
-    }}
-    '''
-    */
 
     final promptTemplate = ChatPromptTemplate.fromPromptMessages([
       SystemChatMessagePromptTemplate.fromTemplate(
         '''You are an expert botanist and plant encyclopedia. 
-      When given a scientific plant name, you provide accurate, 
+      When given a scientific or common plant name, you provide accurate, 
       concise and well-structured plant information.
       Always respond in the exact format given to you. 
       Do not add extra information outside the format.
       ''',
       ),
       HumanChatMessagePromptTemplate.fromTemplate('''
-      Give the following information on plant: "{plant_name}" 
-      You MUST respond ONLY with a valid JSON object matching this structure exactly:
+      Give the following information on plant: "{plant_name}"
+      You MUST respond ONLY with a valid JSON object matching this structure exactly. 
+      Format the "common_name" nicely as it will be used as the best match name for the UI header:
       {{
         "common_name" : "The most common english name used in India.",
         "scientific_name" : "Plants scientific name",
         "rarity" : "Rarity of the plant out of 5",
         "environment" : "In which environment is it found the most give in format like 'ARID/SUNNY'.",
-        "medical_uses" : "A sentence in 20-25 words mentioning 3 medical uses.",
-        "edibility" : "If edible then give info on how its used in general in short, if not then or poisonous then mention that",
+        "medical_uses" : ["Short point 1, 5-8 words", "Short point 2, 5-8 words", "Short point 3, 5-8 words"],
+        "edibility" : "If edible then give info on how its used in general in short, if not edible or poisonous then mention that",
+        "taste" : "If edible, describe what it tastes like in 3-5 words (e.g. 'Bitter, earthy, slightly sweet'). If not edible, use empty string.",
+        "harvest_season" : "If edible fruit/vegetable, give the season when it is harvested (e.g. 'Summer (June-August)' or 'Year-round'). If not edible, use empty string.",
+        "growth_time" : "If edible fruit/vegetable, give approximate time to grow/harvest (e.g. '90-120 days' or '2-3 years for fruit production'). If not edible, use empty string.",
         "origin" : "origin of the plant",
-        "facts" : "List of 2 interesting/quick facts about the plant"
+        "facts" : ["Fact 1, 6-10 words", "Fact 2, 6-10 words", "Fact 3, 6-10 words"]
       }}
       '''),
     ]);
@@ -75,9 +94,26 @@ class PlantInfoService {
     try {
       final String response = await chain.invoke({'plant_name': plantName});
       print(response);
-      return jsonDecode(response);
+
+      // Gemini sometimes wraps JSON in markdown blocks like ```json ... ```
+      // This cleans it up before parsing if necessary.
+      String cleanedResponse = response.trim();
+      if (cleanedResponse.startsWith('```json')) {
+        cleanedResponse = cleanedResponse.substring(7);
+      }
+      if (cleanedResponse.startsWith('```')) {
+        cleanedResponse = cleanedResponse.substring(3);
+      }
+      if (cleanedResponse.endsWith('```')) {
+        cleanedResponse = cleanedResponse.substring(
+          0,
+          cleanedResponse.length - 3,
+        );
+      }
+
+      return jsonDecode(cleanedResponse.trim());
     } catch (e) {
-      print("Error fetching from LangChain $e");
+      print("Error fetching from LangChain: $e");
       return null;
     }
   }

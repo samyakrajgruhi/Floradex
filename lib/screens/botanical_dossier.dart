@@ -1,8 +1,57 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
 
 class BotanicalDossierScreen extends StatelessWidget {
-  const BotanicalDossierScreen({super.key});
+  final String plantName;
+  final Map<String, dynamic>? plantDetails;
+  final XFile? plantImage;
+
+  const BotanicalDossierScreen({
+    super.key,
+    required this.plantName,
+    this.plantDetails,
+    required this.plantImage,
+  });
+
+  void _showFullImageDialog(BuildContext context, XFile imageFile) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.all(16),
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.center,
+            children: [
+              InteractiveViewer(child: Image.file(File(imageFile.path))),
+              Positioned(
+                top: -10,
+                right: -10,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: AppTheme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,22 +89,57 @@ class BotanicalDossierScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(AppTheme.space2),
                   child: Stack(
                     children: [
-                      // Placeholder for actual image
-                      Column(
-                        children: [
-                          AspectRatio(
-                            aspectRatio: 1.0,
-                            child: Container(
-                              color: AppTheme.surfaceContainerLow,
-                              child: const Icon(
-                                Icons.eco,
-                                size: 100,
-                                color: AppTheme.outlineVariant,
-                              ),
+                      plantImage != null
+                          ? Stack(
+                              children: [
+                                AspectRatio(
+                                  aspectRatio: 1.0,
+                                  child: Image.file(
+                                    File(plantImage!.path),
+                                    fit: BoxFit
+                                        .cover, // Ensures the image fills the square
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: Container(
+                                    decoration: const BoxDecoration(
+                                      color: Colors
+                                          .black54, // Semi-transparent background for visibility
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: IconButton(
+                                      icon: const Icon(
+                                        Icons.fullscreen,
+                                        color: Colors.white,
+                                      ),
+                                      onPressed: () => _showFullImageDialog(
+                                        context,
+                                        plantImage!,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          :
+                            // Placeholder for actual image
+                            Column(
+                              children: [
+                                AspectRatio(
+                                  aspectRatio: 1.0,
+                                  child: Container(
+                                    color: AppTheme.surfaceContainerLow,
+                                    child: const Icon(
+                                      Icons.eco,
+                                      size: 100,
+                                      color: AppTheme.outlineVariant,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
                       // ID Tag
                       Positioned(
                         bottom: AppTheme.space2,
@@ -87,7 +171,7 @@ class BotanicalDossierScreen extends StatelessWidget {
 
             // HEADER TEXT
             Text(
-              'Aloe Vera',
+              plantDetails?['common_name'] ?? plantName,
               style: Theme.of(
                 context,
               ).textTheme.displayLarge?.copyWith(color: AppTheme.primary),
@@ -102,7 +186,7 @@ class BotanicalDossierScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppTheme.space1),
             Text(
-              'Aloe barbadensis miller',
+              plantDetails?['scientific_name'] ?? 'Unknown species',
               style: Theme.of(
                 context,
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w500),
@@ -216,9 +300,33 @@ class BotanicalDossierScreen extends StatelessWidget {
                   const Text('MEDICAL USES'),
                 ],
               ),
-              body: Text(
-                'Soothing burns, skin hydration, and powerful anti-inflammatory properties for topical treatment.',
-                style: Theme.of(context).textTheme.bodyLarge,
+              body: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildFactRow(
+                    context,
+                    '1',
+                    (plantDetails?['medical_uses'] as List?)?.isNotEmpty == true
+                        ? plantDetails!['medical_uses'][0]
+                        : 'Soothing burns and skin hydration.',
+                  ),
+                  const SizedBox(height: AppTheme.space3),
+                  _buildFactRow(
+                    context,
+                    '2',
+                    (plantDetails?['medical_uses'] as List?)?.isNotEmpty == true
+                        ? plantDetails!['medical_uses'][1]
+                        : 'Anti-inflammatory properties for topical treatment.',
+                  ),
+                  const SizedBox(height: AppTheme.space3),
+                  _buildFactRow(
+                    context,
+                    '3',
+                    (plantDetails?['medical_uses'] as List?)?.isNotEmpty == true
+                        ? plantDetails!['medical_uses'][2]
+                        : 'Supports digestive health when consumed.',
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: AppTheme.space6),
@@ -236,9 +344,75 @@ class BotanicalDossierScreen extends StatelessWidget {
                   const Text('EDIBILITY'),
                 ],
               ),
-              body: Text(
-                'Edible gel can be used in drinks, but the yellow aloin in the outer skin should be strictly avoided.',
-                style: Theme.of(context).textTheme.bodyLarge,
+              body: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    plantDetails?['edibility'] ??
+                        'Edible gel can be used in drinks, but the yellow aloin in the outer skin should be strictly avoided.',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                  if ((plantDetails?['taste'] as String?)?.isNotEmpty ==
+                      true) ...[
+                    const SizedBox(height: AppTheme.space3),
+                    Row(
+                      children: [
+                        Text(
+                          'TASTE: ',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        Expanded(
+                          child: Text(
+                            plantDetails!['taste'] ?? '',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if ((plantDetails?['harvest_season'] as String?)
+                          ?.isNotEmpty ==
+                      true) ...[
+                    const SizedBox(height: AppTheme.space2),
+                    Row(
+                      children: [
+                        Text(
+                          'SEASON: ',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        Expanded(
+                          child: Text(
+                            plantDetails!['harvest_season'] ?? '',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if ((plantDetails?['growth_time'] as String?)?.isNotEmpty ==
+                      true) ...[
+                    const SizedBox(height: AppTheme.space2),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      spacing: 2,
+                      children: [
+                        Text(
+                          'GROWS IN: ',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        Expanded(
+                          child: Text(
+                            plantDetails!['growth_time'] ?? '',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
               ),
             ),
             const SizedBox(height: AppTheme.space6),
@@ -300,19 +474,25 @@ class BotanicalDossierScreen extends StatelessWidget {
                   _buildFactRow(
                     context,
                     '1',
-                    'A resilient succulent species known for extreme drought tolerance.',
+                    (plantDetails?['facts'] as List?)?.isNotEmpty == true
+                        ? plantDetails!['facts'][0]
+                        : 'A resilient succulent known for extreme drought tolerance.',
                   ),
                   const SizedBox(height: AppTheme.space3),
                   _buildFactRow(
                     context,
                     '2',
-                    'Has been used medicinally for over 6,000 years, dating back to Ancient Egypt.',
+                    (plantDetails?['facts'] as List?)?.isNotEmpty == true
+                        ? plantDetails!['facts'][1]
+                        : 'Used medicinally for over 6,000 years by ancient civilizations.',
                   ),
                   const SizedBox(height: AppTheme.space3),
                   _buildFactRow(
                     context,
                     '3',
-                    'Contains over 75 active constituents including vitamins and minerals.',
+                    (plantDetails?['facts'] as List?)?.isNotEmpty == true
+                        ? plantDetails!['facts'][2]
+                        : 'Contains over 75 active vitamins and minerals.',
                   ),
                 ],
               ),

@@ -43,6 +43,8 @@ dependencies:
   flutter_dotenv: ^6.0.0
   langchain: ^0.8.1
   langchain_openai: ^0.8.1+1
+  langchain_google: ^0.7.1+2
+  googleai_dart: 3.0.0
 
 dev_dependencies:
   flutter_test:
@@ -100,5 +102,3 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-dependency_overrides: 
-  googleai_dart: 3.3.0

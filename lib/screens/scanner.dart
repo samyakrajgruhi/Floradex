@@ -1,5 +1,5 @@
 // ignore_for_file: unused_field, unused_local_variable
-
+import 'package:floradex/services/plant_info.dart';
 import 'package:floradex/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
 import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:floradex/services/plant_info.dart';
+import 'package:floradex/screens/botanical_dossier.dart';
 
 class ScannerPage extends StatefulWidget {
   const ScannerPage({Key? key}) : super(key: key);
@@ -20,10 +20,6 @@ class _ScannerPageState extends State<ScannerPage> {
   CameraController? _cameraController;
   bool _isCameraInitialized = false;
 
-  String? _identifiedPlantName;
-  Map<String, dynamic>? _plantDetails;
-
-  bool _isLoading = false;
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _setupCamera() async {
@@ -59,8 +55,6 @@ class _ScannerPageState extends State<ScannerPage> {
     super.dispose();
   }
 
-  XFile? _capturedImage;
-
   Future<void> _openCamera() async {
     if (!_isCameraInitialized || _cameraController == null) {
       return null;
@@ -85,61 +79,36 @@ class _ScannerPageState extends State<ScannerPage> {
   }
 
   Future<void> _identifyPlant(XFile photo) async {
-    setState(() {
-      _isLoading = true;
-      _identifiedPlantName = null;
-      _capturedImage = photo;
-    });
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _LoadingScreen(),
+    );
 
     try {
-      final bytes = await photo.readAsBytes();
-      final base64Image = base64Encode(bytes);
-      final apiKey = dotenv.env['PLANT_ID_API_KEY'];
+      final plantInfoService = PlantInfoService();
 
-      if (apiKey == null) {
-        setState(() {
-          _identifiedPlantName = "Error: Missing API Key";
-          _isLoading = false;
-        });
-        return;
-      }
+      final plantDetails = await plantInfoService.analyzePlantImage(photo);
 
-      final url = Uri.parse('https://api.plant.id/v2/identify');
-      final headers = {'Content-Type': 'application/json', 'Api-Key': apiKey};
-      final body = jsonEncode({
-        'images': [base64Image],
-      });
-      print("Sending image to Plant.id");
+      Navigator.pop(context);
 
-      final response = await http.post(url, headers: headers, body: body);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        if (data['suggestions'] != null && data['suggestions'].isNotEmpty) {
-          final bestMatchName = data['suggestions'][0]['plant_name'];
-          setState(() {
-            _identifiedPlantName = bestMatchName;
-          });
-
-          final infoService = PlantInfoService();
-          final details = await infoService.getPlantDetails(bestMatchName);
-
-          setState(() {
-            _plantDetails = details;
-          });
-        } else {
-          setState(() => _identifiedPlantName = "No plant found!");
-        }
-      } else {
-        setState(
-          () => _identifiedPlantName = "API Error: ${response.statusCode}",
+      if (plantDetails != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BotanicalDossierScreen(
+              plantName: plantDetails['common_name'] ?? 'Unkown Plant',
+              plantImage: photo,
+              plantDetails: plantDetails,
+            ),
+          ),
         );
+      } else {
+        print("Could not gather plant details.");
       }
     } catch (e) {
-      setState(() => _identifiedPlantName = "Network Error");
-    } finally {
-      // Whether it succeeds or fails, hide the loading spinner
-      setState(() => _isLoading = false);
+      print("Error during plant analysis : $e");
+      Navigator.pop(context);
     }
   }
 
@@ -273,127 +242,6 @@ class _ScannerPageState extends State<ScannerPage> {
             // --- NEW UI UPDATES BELOW VIEWFINDER ---
             const SizedBox(height: 16),
 
-            // 1. Temporary Text / Loading Indicator
-            if (_isLoading)
-              const CircularProgressIndicator(color: AppTheme.primary)
-            else if (_identifiedPlantName != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  children: [
-                    Text(
-                      '🌿 ${_plantDetails?['common_name'] ?? _identifiedPlantName}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.greenAccent,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Space Grotesk',
-                      ),
-                    ),
-
-                                        // Show LLM details once they arrive!
-                    if (_plantDetails != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        _plantDetails!['scientific_name'] ?? '',
-                        style: const TextStyle(
-                          color: Colors.white54,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      // Environment Tag
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white10,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Colors.greenAccent.withOpacity(0.5),
-                          ),
-                        ),
-                        child: Text(
-                          _plantDetails!['environment'] ?? 'UNKNOWN ENV',
-                          style: const TextStyle(
-                            color: Colors.greenAccent,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
-                      
-                      // Origin & Rarity
-                      Text(
-                        '📍 ${_plantDetails!['origin'] ?? 'Unknown'}   •   ⭐ ${_plantDetails!['rarity'] ?? '?'}/5',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      
-                      const SizedBox(height: 16),
-
-                      // Medical Uses
-                      const Text(
-                        'MEDICAL USES',
-                        style: TextStyle(color: AppTheme.primary, fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        (_plantDetails!['medical_uses'] is List)
-                            ? '• ' + (_plantDetails!['medical_uses'] as List).join('\n• ')
-                            : _plantDetails!['medical_uses']?.toString() ?? '',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-                      
-                      const SizedBox(height: 12),
-
-                      // Edibility
-                      const Text(
-                        'EDIBILITY',
-                        style: TextStyle(color: AppTheme.primary, fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _plantDetails!['edibility']?.toString() ?? '',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.white70, fontSize: 12),
-                      ),
-
-                      const SizedBox(height: 12),
-
-                      // Facts
-                      const Text(
-                        'FACTS',
-                        style: TextStyle(color: AppTheme.primary, fontSize: 10, letterSpacing: 1.2, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        (_plantDetails!['facts'] is List)
-                            ? '• ' + (_plantDetails!['facts'] as List).join('\n• ')
-                            : _plantDetails!['facts']?.toString() ?? '',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              )
-            else
-              const SizedBox(height: 30), // Empty space so layout doesn't jump
-
             const SizedBox(height: 16),
 
             // 2. Buttons Row (Gallery + Snap)
@@ -496,6 +344,57 @@ class _ScannerReticle extends StatelessWidget {
             top: BorderSide(color: Color(0xFF007523), width: 4),
             left: BorderSide(color: Color(0xFF007523), width: 4),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadingScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      child: Container(
+        color: AppTheme.surface,
+        padding: const EdgeInsets.all(AppTheme.space6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              color: AppTheme.surfaceContainerHighest,
+              padding: const EdgeInsets.all(AppTheme.space4),
+              child: Column(
+                children: [
+                  Text(
+                    'ANALYZING',
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                      color: AppTheme.primary,
+                      letterSpacing: 2.0,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.space4),
+                  const SizedBox(
+                    width: 200,
+                    child: LinearProgressIndicator(
+                      backgroundColor: AppTheme.surfaceContainerHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppTheme.primary,
+                      ),
+                      minHeight: 8,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.space4),
+                  Text(
+                    'Scanning botanical data...',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.onSurface.withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
