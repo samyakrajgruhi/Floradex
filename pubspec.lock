@@ -592,6 +592,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.1+2"
+  langchain_ollama:
+    dependency: "direct main"
+    description:
+      name: langchain_ollama
+      sha256: d5733d86d7bd262abcff142b92ed3612e116e4e052105daec7d9356d3cd892f3
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.1"
   langchain_openai:
     dependency: "direct main"
     description:
@@ -696,6 +704,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "9.3.0"
+  ollama_dart:
+    dependency: transitive
+    description:
+      name: ollama_dart
+      sha256: "7ced51fa4151bef696a9e1571ca7b4ac4bc4b35331e45ae5e0684560fcd26d99"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.0+1"
   openai_dart:
     dependency: transitive
     description:
@@ -721,7 +737,7 @@ packages:
     source: hosted
     version: "1.9.1"
   path_provider:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path_provider
       sha256: "50c5dd5b6e1aaf6fb3a78b33f6aa3afca52bf903a8a5298f53101fdaee55bbcd"

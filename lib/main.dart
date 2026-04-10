@@ -5,9 +5,14 @@ import 'package:floradex/screens/scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:floradex/theme/app_theme.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:floradex/models/plant_record.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  Hive.registerAdapter(PlantRecordAdapter());
+  await Hive.openBox<PlantRecord>('plants_vault');
 
   await dotenv.load(fileName: ".env");
   runApp(const FloraDexApp());

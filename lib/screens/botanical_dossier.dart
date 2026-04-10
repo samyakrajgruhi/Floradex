@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:floradex/services/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../theme/app_theme.dart';
@@ -503,7 +503,18 @@ class BotanicalDossierScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () {},
+                onPressed: () async {
+                  if (plantDetails == null || plantImage == null) return;
+                  final dbService = new DatabaseService();
+                  await dbService.savePlantToVault(plantDetails!, plantImage!);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Plant successfully saved.')
+                      ),
+                    );
+                  }
+                },
                 icon: const Icon(Icons.save_alt, size: 16),
                 label: const Text('SAVE TO VAULT'),
               ),
