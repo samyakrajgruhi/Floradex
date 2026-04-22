@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:floradex/screens/dashboard.dart';
 import 'package:floradex/services/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -510,9 +511,10 @@ class BotanicalDossierScreen extends StatelessWidget {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Plant successfully saved.')
+                        content: Text('Plant successfully saved.'),
                       ),
                     );
+                    Navigator.popUntil(context, (route) => route.isFirst);
                   }
                 },
                 icon: const Icon(Icons.save_alt, size: 16),

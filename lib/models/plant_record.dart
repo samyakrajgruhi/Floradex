@@ -1,7 +1,5 @@
-import 'dart:ffi';
 
 import 'package:hive/hive.dart';
-import 'package:image_picker/image_picker.dart';
 part 'plant_record.g.dart';
 
 @HiveType(typeId: 0)

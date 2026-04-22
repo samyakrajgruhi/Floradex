@@ -7,40 +7,48 @@ import 'package:langchain_google/langchain_google.dart';
 
 class PlantInfoService {
   Future<Map<String, dynamic>?> analyzePlantImage(XFile photo) async {
-    final bytes = await photo.readAsBytes();
-    final base64Image = base64Encode(bytes);
-    final apiKey = dotenv.env['PLANT_ID_API_KEY'];
+    final apiKey = dotenv.env['PLANTNET_API_KEY'];
 
     if (apiKey == null) {
-      print('PLANT_ID_API_KEY not found'); // close loading
+      print('PLANTNET_API_KEY not found'); // close loading
       return null;
     }
 
-    final url = Uri.parse('https://api.plant.id/v2/identify');
-    final headers = {'Content-Type': 'application/json', 'Api-Key': apiKey};
-    final body = jsonEncode({
-      'images': [base64Image],
-    });
-    print("Sending image to Plant.id");
+    final url = Uri.parse('https://my-api.plantnet.org/v2/identify/all?api-key=$apiKey');
+    print("Sending image to Plantnet via Multipart");
 
-    final response = await http.post(url, headers: headers, body: body);
+    try{
+      var request = http.MultipartRequest('POST', url);
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      print("Plant.id API Error :${response.statusCode}");
+      request.files.add(await http.MultipartFile.fromPath('images', photo.path));
+
+      request.files.add(http.MultipartFile.fromString('organs', 'auto'));
+
+      var streamedResponse = await request.send();
+
+      var response = await http.Response.fromStream(streamedResponse);
+
+      if(response.statusCode != 200 && response.statusCode != 201){
+        print("Plantnet API Error : ${response.statusCode}");
+        print("Resposne body :${response.body}");
+        return null;
+      }
+
+      final Map<String, dynamic> data = jsonDecode(response.body);
+
+      if(data['results'] == null || data['results'].isEmpty){
+        print("No Plant Suggestions found.");
+        return null;
+      }
+      final bestMatchName = data['results'][0]['species']['scientificNameWithoutAuthor'];
+      print("Plant Name : $bestMatchName.");
+
+      return await getPlantDetailsFromGemini(bestMatchName);
+      
+    } catch (e) {
+      print("Error communicating with Plantnet API: $e");
       return null;
     }
-
-    final Map<String, dynamic> data = jsonDecode(response.body);
-
-    if (data['suggestions'] == null || data['suggestions'].isEmpty) {
-      print("No plant suggestions found.");
-      return null;
-    }
-
-    final bestMatchName = data['suggestions'][0]['plant_name'];
-    print("Plant Name : $bestMatchName .");
-
-    return await getPlantDetailsFromGemini(bestMatchName);
   }
 
   Future<Map<String, dynamic>?> getPlantDetailsFromGemini(

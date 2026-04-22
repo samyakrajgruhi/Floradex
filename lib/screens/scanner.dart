@@ -2,11 +2,8 @@
 import 'package:floradex/services/plant_info.dart';
 import 'package:floradex/theme/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:camera/camera.dart';
-import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:floradex/screens/botanical_dossier.dart';
 
 class ScannerPage extends StatefulWidget {
@@ -150,18 +147,17 @@ class _ScannerPageState extends State<ScannerPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8E5D8), // surfaceContainerHigh
+                    color: const Color(0xFFE8E5D8), 
                     border: Border.all(
-                      color: const Color(0xFF007523), // primary
+                      color: const Color(0xFF007523), 
                       width: 4,
                     ),
                   ),
                   child: Stack(
                     children: [
-                      // Simulated Camera Feed (Dark placeholder for now)
                       Positioned.fill(
                         child: Container(
-                          margin: const EdgeInsets.all(4), // Inner gap
+                          margin: const EdgeInsets.all(4), 
                           color: const Color(0xFF1A1A1A),
                           child: _isCameraInitialized
                               ? CameraPreview(_cameraController!)
