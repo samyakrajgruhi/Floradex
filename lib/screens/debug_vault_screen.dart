@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:floradex/models/plant_record.dart';
 import 'package:floradex/services/database_service.dart';
 import 'package:flutter/material.dart';
@@ -17,8 +15,17 @@ class _debugVaultScreenState extends State<DebugVaultScreen> {
   List<PlantRecord> PlantRecords = [];
   @override
   void initState() {
-    PlantRecords = dbService.fetchPlants();
     super.initState();
+    _loadPlants();
+  }
+
+  Future<void> _loadPlants() async {
+    final plants = await dbService.fetchPlants();
+    if (mounted) {
+      setState(() {
+        PlantRecords = plants;
+      });
+    }
   }
 
   List<DataColumn> columns = [

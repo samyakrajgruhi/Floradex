@@ -10,7 +10,7 @@ class DatabaseService {
     Map<String, dynamic> plantDetails,
     XFile imageFile,
   ) async {
-    final box = Hive.box<PlantRecord>('plants_vault');
+    final box = await Hive.openBox<PlantRecord>('plants_vault');
     final itemId = plantDetails['scientific_name']
         .toString()
         .toLowerCase()
@@ -49,13 +49,13 @@ class DatabaseService {
     await box.put(itemId, finalPlantRecord);
   }
 
-  List<PlantRecord> fetchPlants() {
-    final box = Hive.box<PlantRecord>('plants_vault').values.toList();
-    return box;
+  Future<List<PlantRecord>> fetchPlants() async {
+    final box = await Hive.openBox<PlantRecord>('plants_vault');
+    return box.values.toList();
   }
 
   Future<void> clearVault() async {
-    final box = Hive.box<PlantRecord>('plants_vault');
+    final box = await Hive.openBox<PlantRecord>('plants_vault');
     await box.clear();
   }
 }

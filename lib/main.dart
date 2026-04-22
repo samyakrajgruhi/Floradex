@@ -1,5 +1,6 @@
 import 'package:floradex/screens/botanical_vault.dart';
 import 'package:floradex/screens/dashboard.dart';
+import 'package:floradex/screens/debug_vault_screen.dart';
 import 'package:floradex/screens/researcher_profile.dart';
 import 'package:floradex/screens/scanner.dart';
 import 'package:flutter/material.dart';
@@ -59,9 +60,24 @@ class _MainScreenState extends State<MainScreen> {
             alignment: Alignment.center,
             child: InkWell(
               onTap: () {
+                if (_currentIndex == 1) {
+                  setState(() {
+                    _currentIndex = 0;
+                  });
+                }
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => ResearcherProfileScreen()),
                 );
+              },
+              onLongPress: () {
+                if (_currentIndex == 1) {
+                  setState(() {
+                    _currentIndex = 0;
+                  });
+                }
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => DebugVaultScreen()));
               },
               child: Container(
                 width: 32,

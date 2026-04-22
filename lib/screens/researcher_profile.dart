@@ -1,5 +1,6 @@
 // ignore_for_file: unused_element_parameter
 
+import 'package:floradex/services/database_service.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
@@ -183,31 +184,33 @@ class ResearcherProfileScreen extends StatelessWidget {
             const SizedBox(height: AppTheme.space8),
 
             // ACHIEVEMENTS
-            _RetroShadowCard(
-              backgroundColor: AppTheme.tertiaryContainer,
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.space4,
-                vertical: AppTheme.space3,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'ACHIEVEMENTS',
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontFamily: 'Press Start 2P',
-                      fontSize: 10,
-                      color: AppTheme.onTertiaryContainer,
+            GestureDetector(
+              child: _RetroShadowCard(
+                backgroundColor: AppTheme.tertiaryContainer,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.space4,
+                  vertical: AppTheme.space3,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'ACHIEVEMENTS',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontFamily: 'Press Start 2P',
+                        fontSize: 10,
+                        color: AppTheme.onTertiaryContainer,
+                      ),
                     ),
-                  ),
-                  Text(
-                    '8 / 24 UNLOCKED',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: AppTheme.onTertiaryContainer,
-                      fontWeight: FontWeight.w700,
+                    Text(
+                      '8 / 24 UNLOCKED',
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: AppTheme.onTertiaryContainer,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: AppTheme.space4),
@@ -256,6 +259,51 @@ class ResearcherProfileScreen extends StatelessWidget {
               label: 'SYNC DATA',
               trailingIcon: Icons.check_box_outlined,
               trailingColor: AppTheme.primary,
+            ),
+            _buildOperationButton(
+              context,
+              icon: Icons.restart_alt,
+              label: 'RESET VAULT',
+              color: AppTheme.error,
+              trailingIcon: null, // No trailing icon
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext dialogContext) {
+                    return AlertDialog(
+                      title: const Text('RESET VAULT'),
+                      content: const Text(
+                        'Are you sure you want to reset your vault? Your Saved Plants will be deleted.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(dialogContext);
+                          },
+                          child: const Text('CANCEL'),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            Navigator.pop(dialogContext);
+                            await DatabaseService().clearVault();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Vault successfully reset.'),
+                                ),
+                              );
+                            }
+                          },
+                          child: const Text(
+                            'CONFIRM',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
             ),
             _buildOperationButton(
               context,
@@ -338,6 +386,7 @@ class ResearcherProfileScreen extends StatelessWidget {
 
   Widget _buildOperationButton(
     BuildContext context, {
+    VoidCallback? onTap,
     required IconData icon,
     required String label,
     Color? color,
@@ -347,30 +396,33 @@ class ResearcherProfileScreen extends StatelessWidget {
     final effectiveColor = color ?? AppTheme.onSurface;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.space4),
-      child: _RetroShadowCard(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.space4,
-          vertical: AppTheme.space4,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: effectiveColor, size: 24),
-            const SizedBox(width: AppTheme.space4),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: effectiveColor,
-                fontWeight: FontWeight.w800,
+      child: GestureDetector(
+        onTap: onTap,
+        child: _RetroShadowCard(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.space4,
+            vertical: AppTheme.space4,
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: effectiveColor, size: 24),
+              const SizedBox(width: AppTheme.space4),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: effectiveColor,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-            ),
-            const Spacer(),
-            if (trailingIcon != null)
-              Icon(
-                trailingIcon,
-                color: trailingColor ?? AppTheme.onSurface,
-                size: 20,
-              ),
-          ],
+              const Spacer(),
+              if (trailingIcon != null)
+                Icon(
+                  trailingIcon,
+                  color: trailingColor ?? AppTheme.onSurface,
+                  size: 20,
+                ),
+            ],
+          ),
         ),
       ),
     );

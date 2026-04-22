@@ -13,7 +13,7 @@ class ScannerPage extends StatefulWidget {
   State<ScannerPage> createState() => _ScannerPageState();
 }
 
-class _ScannerPageState extends State<ScannerPage> {
+class _ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
   CameraController? _cameraController;
   bool _isCameraInitialized = false;
 
@@ -43,13 +43,36 @@ class _ScannerPageState extends State<ScannerPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _setupCamera();
   }
 
   @override
   void dispose() {
-    _cameraController?.dispose();
+    _isCameraInitialized = false;
+    WidgetsBinding.instance.removeObserver(this);
+    if (_isCameraInitialized && _cameraController != null) {
+      _cameraController!.pausePreview();
+      _cameraController!.dispose();
+    }
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final CameraController? cameraController = _cameraController;
+
+    if (cameraController == null || !cameraController.value.isInitialized) {
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.paused) {
+      cameraController.dispose();
+      _isCameraInitialized = false;
+    } else if (state == AppLifecycleState.resumed) {
+      _setupCamera();
+    }
   }
 
   Future<void> _openCamera() async {
@@ -147,9 +170,9 @@ class _ScannerPageState extends State<ScannerPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE8E5D8), 
+                    color: const Color(0xFFE8E5D8),
                     border: Border.all(
-                      color: const Color(0xFF007523), 
+                      color: const Color(0xFF007523),
                       width: 4,
                     ),
                   ),
@@ -157,7 +180,7 @@ class _ScannerPageState extends State<ScannerPage> {
                     children: [
                       Positioned.fill(
                         child: Container(
-                          margin: const EdgeInsets.all(4), 
+                          margin: const EdgeInsets.all(4),
                           color: const Color(0xFF1A1A1A),
                           child: _isCameraInitialized
                               ? CameraPreview(_cameraController!)

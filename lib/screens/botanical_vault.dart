@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:floradex/models/plant_record.dart';
 import 'package:floradex/services/database_service.dart';
 import 'package:flutter/material.dart';
 
@@ -13,12 +14,21 @@ class BotanicalVaultPage extends StatefulWidget {
 class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
   final dbService = DatabaseService();
 
-  var PlantRecords;
+  List<PlantRecord> PlantRecords = [];
 
   @override
   void initState() {
-    PlantRecords = dbService.fetchPlants();
     super.initState();
+    _loadPlants();
+  }
+
+  Future<void> _loadPlants() async {
+    final plants = await dbService.fetchPlants();
+    if (mounted) {
+      setState(() {
+        PlantRecords = plants;
+      });
+    }
   }
 
   @override
