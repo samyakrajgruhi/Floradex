@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:floradex/screens/dashboard.dart';
 import 'package:floradex/services/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -506,7 +505,7 @@ class BotanicalDossierScreen extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: () async {
                   if (plantDetails == null || plantImage == null) return;
-                  final dbService = new DatabaseService();
+                  final dbService = DatabaseService();
                   await dbService.savePlantToVault(plantDetails!, plantImage!);
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(

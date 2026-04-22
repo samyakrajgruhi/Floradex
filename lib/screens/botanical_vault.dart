@@ -1,7 +1,25 @@
+import 'dart:io';
+
+import 'package:floradex/services/database_service.dart';
 import 'package:flutter/material.dart';
 
-class BotanicalVaultPage extends StatelessWidget {
+class BotanicalVaultPage extends StatefulWidget {
   const BotanicalVaultPage({super.key});
+
+  @override
+  State<BotanicalVaultPage> createState() => _BotanicalVaultPageState();
+}
+
+class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
+  final dbService = DatabaseService();
+
+  var PlantRecords;
+
+  @override
+  void initState() {
+    PlantRecords = dbService.fetchPlants();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -206,79 +224,27 @@ class BotanicalVaultPage extends StatelessWidget {
 
               // GRID SECTION
               Expanded(
-                child: GridView.count(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 0.8,
-                  children: [
-                    _PlantDataChip(
-                      name: 'OAK',
-                      scientificName: 'QUERCUS ROBUR',
-                      tagLabel: 'NEW',
-                      tagColor: colorScheme.error, // Reddish tag
-                      imagePath:
-                          'assets/oak.png', // Replace with real asset/network
-                    ),
-                    _PlantDataChip(
-                      name: 'HIBISCUS',
-                      scientificName: 'HIBISCUS ROSA',
-                      tagLabel: 'RARE',
-                      tagColor: colorScheme.tertiary, // Brownish tag
-                      imagePath: 'assets/hibiscus.png',
-                    ),
-                    _PlantDataChip(
-                      name: 'NEEM',
-                      scientificName: 'AZADIRACHTA',
-                      imagePath: 'assets/neem.png',
-                    ),
-                    _PlantDataChip(
-                      name: 'CACTUS',
-                      scientificName: 'CACTACEAE',
-                      imagePath: 'assets/cactus.png',
-                    ),
-
-                    // Locked / Unknown Placeholder
-                    Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHigh,
-                        border: Border.all(
-                          color: colorScheme.outline.withOpacity(0.5),
-                          width: 2,
-                          style: BorderStyle.solid,
-                        ),
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '?',
-                              style: textTheme.headlineLarge?.copyWith(
-                                fontFamily: 'Press Start 2P',
-                                color: colorScheme.outline,
-                              ),
+                child: PlantRecords.isEmpty
+                    ? const Center(child: Text('No Plants Discovered Yet.'))
+                    : GridView.builder(
+                        itemCount: PlantRecords.length,
+                        itemBuilder: (context, index) {
+                          return _PlantDataChip(
+                            name: PlantRecords[index].plantName,
+                            scientificName: PlantRecords[index]
+                                .scientificName, // Reddish tag
+                            imagePath: PlantRecords[index]
+                                .imagePath, // Replace with real asset/network
+                          );
+                        },
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              childAspectRatio: 0.8,
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '???',
-                              style: textTheme.labelSmall?.copyWith(
-                                fontFamily: 'Press Start 2P',
-                                color: colorScheme.outline,
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
-                    ),
-
-                    _PlantDataChip(
-                      name: 'SUNFLOWER',
-                      scientificName: 'HELIANTHUS',
-                      imagePath: 'assets/sunflower.png',
-                    ),
-                  ],
-                ),
               ),
             ],
           ),
@@ -350,13 +316,11 @@ class _PlantDataChip extends StatelessWidget {
               color: colorScheme.surfaceContainerHigh,
               child: Stack(
                 children: [
-                  Center(
-                    // Placeholder icon for missing assets in snippet
-                    child: Icon(
-                      Icons.park,
-                      size: 64,
-                      color: colorScheme.primary,
-                    ),
+                  Image.file(
+                    File(imagePath),
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
                   ),
                   if (tagLabel != null && tagColor != null)
                     Positioned(

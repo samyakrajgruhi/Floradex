@@ -10,6 +10,14 @@ class DatabaseService {
     Map<String, dynamic> plantDetails,
     XFile imageFile,
   ) async {
+    final box = Hive.box<PlantRecord>('plants_vault');
+    final itemId = plantDetails['scientific_name']
+        .toString()
+        .toLowerCase()
+        .replaceAll(' ', '_');
+    if (box.containsKey(itemId)) {
+      return;
+    }
     final directory = await getApplicationDocumentsDirectory();
     final String fileName =
         DateTime.now().millisecondsSinceEpoch.toString() + '.jpg';
@@ -18,7 +26,7 @@ class DatabaseService {
     await File(imageFile.path).copy(permenantImagePath);
 
     final finalPlantRecord = PlantRecord()
-      ..id = DateTime.now().microsecondsSinceEpoch.toString()
+      ..id = itemId
       ..imagePath = permenantImagePath
       ..plantName = plantDetails['common_name'] ?? 'Unknown'
       ..scientificName = plantDetails['scientific_name'] ?? 'Unknown'
@@ -38,7 +46,16 @@ class DatabaseService {
           (plantDetails['facts'] as List?)?.map((e) => e.toString()).toList() ??
           [];
 
+    await box.put(itemId, finalPlantRecord);
+  }
+
+  List<PlantRecord> fetchPlants() {
+    final box = Hive.box<PlantRecord>('plants_vault').values.toList();
+    return box;
+  }
+
+  Future<void> clearVault() async {
     final box = Hive.box<PlantRecord>('plants_vault');
-    await box.add(finalPlantRecord);
+    await box.clear();
   }
 }
