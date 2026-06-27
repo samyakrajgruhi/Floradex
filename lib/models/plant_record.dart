@@ -1,4 +1,3 @@
-
 import 'package:hive/hive.dart';
 part 'plant_record.g.dart';
 
@@ -42,4 +41,7 @@ class PlantRecord extends HiveObject {
 
   @HiveField(12)
   late List<String> facts;
+
+  @HiveField(13)
+  late DateTime timestamp;
 }

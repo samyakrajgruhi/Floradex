@@ -7,7 +7,7 @@ import 'package:camera/camera.dart';
 import 'package:floradex/screens/botanical_dossier.dart';
 
 class ScannerPage extends StatefulWidget {
-  const ScannerPage({Key? key}) : super(key: key);
+  const ScannerPage({super.key});
 
   @override
   State<ScannerPage> createState() => _ScannerPageState();
@@ -77,7 +77,7 @@ class _ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
 
   Future<void> _openCamera() async {
     if (!_isCameraInitialized || _cameraController == null) {
-      return null;
+      return;
     }
     try {
       final XFile? photo = await _cameraController?.takePicture();

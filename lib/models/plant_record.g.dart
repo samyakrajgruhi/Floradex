@@ -29,13 +29,14 @@ class PlantRecordAdapter extends TypeAdapter<PlantRecord> {
       ..harvestSeason = fields[9] as String
       ..growthTime = fields[10] as String
       ..origin = fields[11] as String
-      ..facts = (fields[12] as List).cast<String>();
+      ..facts = (fields[12] as List).cast<String>()
+      ..timestamp = fields[13] as DateTime;
   }
 
   @override
   void write(BinaryWriter writer, PlantRecord obj) {
     writer
-      ..writeByte(13)
+      ..writeByte(14)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -61,7 +62,9 @@ class PlantRecordAdapter extends TypeAdapter<PlantRecord> {
       ..writeByte(11)
       ..write(obj.origin)
       ..writeByte(12)
-      ..write(obj.facts);
+      ..write(obj.facts)
+      ..writeByte(13)
+      ..write(obj.timestamp);
   }
 
   @override

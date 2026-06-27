@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:intl/intl.dart';
 import 'package:floradex/models/plant_record.dart';
 import 'package:floradex/services/database_service.dart';
 import 'package:flutter/material.dart';
@@ -243,8 +243,10 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
                             name: PlantRecords[index].plantName,
                             scientificName: PlantRecords[index]
                                 .scientificName, // Reddish tag
-                            imagePath: PlantRecords[index]
-                                .imagePath, // Replace with real asset/network
+                            imagePath: PlantRecords[index].imagePath,
+                            tagLabel: '',
+                            tagColor: null,
+                            timestamp: PlantRecords[index].timestamp, // Replace with real asset/network
                           );
                         },
                         gridDelegate:
@@ -298,13 +300,14 @@ class _PlantDataChip extends StatelessWidget {
   final String? tagLabel;
   final Color? tagColor;
   final String imagePath;
-
+  final DateTime timestamp;
   const _PlantDataChip({
     required this.name,
     required this.scientificName,
-    this.tagLabel,
-    this.tagColor,
     required this.imagePath,
+    required this.tagLabel,
+    required this.tagColor,
+    required this.timestamp
   });
 
   @override
@@ -371,7 +374,7 @@ class _PlantDataChip extends StatelessWidget {
                   name,
                   style: textTheme.labelMedium?.copyWith(
                     fontFamily: 'Press Start 2P',
-                    fontSize: 9,
+                    fontSize: 12,
                     color: colorScheme.onSurface,
                   ),
                 ),
@@ -385,6 +388,16 @@ class _PlantDataChip extends StatelessWidget {
                     color: colorScheme.outline,
                   ),
                 ),
+                const SizedBox(height: 4,),
+                Text(
+                  DateFormat('MMM d, yyyy h:mm a').format(timestamp),
+                  style: textTheme.bodySmall?.copyWith(
+                    fontFamily: 'Space Grotesk',
+                    fontSize: 9,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.outline,
+                  ),
+                )
               ],
             ),
           ),

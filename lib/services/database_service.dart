@@ -19,12 +19,11 @@ class DatabaseService {
       return;
     }
     final directory = await getApplicationDocumentsDirectory();
-    final String fileName =
-        DateTime.now().millisecondsSinceEpoch.toString() + '.jpg';
+    final String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
 
     final String permenantImagePath = '${directory.path}/$fileName';
     await File(imageFile.path).copy(permenantImagePath);
-
+    DateTime currentTime = DateTime.now();
     final finalPlantRecord = PlantRecord()
       ..id = itemId
       ..imagePath = permenantImagePath
@@ -44,7 +43,8 @@ class DatabaseService {
       ..origin = plantDetails['origin'] ?? 'Unkown'
       ..facts =
           (plantDetails['facts'] as List?)?.map((e) => e.toString()).toList() ??
-          [];
+          []
+      ..timestamp = currentTime;
 
     await box.put(itemId, finalPlantRecord);
   }
@@ -52,6 +52,12 @@ class DatabaseService {
   Future<List<PlantRecord>> fetchPlants() async {
     final box = await Hive.openBox<PlantRecord>('plants_vault');
     return box.values.toList();
+  }
+
+  Future<List<PlantRecord>> getRecentDiscoveries() async {
+    List<PlantRecord> plants = await fetchPlants();
+    plants.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    return plants.take(2).toList();
   }
 
   Future<void> clearVault() async {
