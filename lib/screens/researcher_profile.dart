@@ -1,11 +1,25 @@
 // ignore_for_file: unused_element_parameter
 
+import 'package:floradex/models/user_info.dart';
 import 'package:floradex/services/database_service.dart';
+import 'package:floradex/services/user_service.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-class ResearcherProfileScreen extends StatelessWidget {
-  const ResearcherProfileScreen({super.key});
+class ResearcherProfileScreen extends StatefulWidget {
+  final UserInfo user;
+  const ResearcherProfileScreen({required this.user, super.key});
+
+  @override
+  State<ResearcherProfileScreen> createState() =>
+      _ResearcherProfileScreenState();
+}
+
+class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,32 +57,13 @@ class ResearcherProfileScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                Positioned(
-                  bottom: -AppTheme.space2,
-                  right: -AppTheme.space2,
-                  child: _RetroShadowCard(
-                    backgroundColor: AppTheme.tertiary,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.space3,
-                      vertical: AppTheme.space1,
-                    ),
-                    child: Text(
-                      'LVL 15',
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: AppTheme.onTertiary,
-                        fontFamily: 'Press Start 2P',
-                        fontSize: 10,
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: AppTheme.space8),
 
             // NAME
             Text(
-              'BOTANIST SAM',
+              widget.user.userName,
               style: Theme.of(context).textTheme.displayLarge?.copyWith(
                 color: AppTheme.primary,
                 height: 1.2,
@@ -96,7 +91,7 @@ class ResearcherProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: AppTheme.space1),
                   Text(
-                    'MASTER RANGER',
+                    widget.user.rankName,
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: AppTheme.secondary,
                       fontWeight: FontWeight.w700,
@@ -131,7 +126,7 @@ class ResearcherProfileScreen extends StatelessWidget {
                       child: Column(
                         children: [
                           Text(
-                            '142',
+                            "${widget.user.userProgress}",
                             style: Theme.of(context).textTheme.displayLarge
                                 ?.copyWith(color: AppTheme.primary),
                           ),

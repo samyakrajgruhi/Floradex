@@ -1,3 +1,4 @@
+import 'package:floradex/models/user_info.dart';
 import 'package:floradex/screens/botanical_vault.dart';
 import 'package:floradex/screens/dashboard.dart';
 import 'package:floradex/screens/debug_vault_screen.dart';
@@ -8,12 +9,39 @@ import 'package:floradex/theme/app_theme.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:floradex/models/plant_record.dart';
+import 'package:uuid/uuid.dart';
+
+late final UserInfo currentUser;
+
+Future<void> bootstrapUserInfo() async {
+  final userBox = await Hive.openBox<UserInfo>('user_data');
+  final uuid = Uuid();
+  final storedUser = userBox.get('current_user');
+  
+  if (storedUser == null) {
+    final defaultUser = UserInfo()
+      ..userId = uuid.v8()
+      ..userName = 'Unkown User'
+      ..userEmail = ''
+      ..rankName = 'Wild Seed'
+      ..userProgress = 0;
+
+    await userBox.put('current_user', defaultUser);
+    currentUser = defaultUser;
+  } else {
+    currentUser = storedUser;
+  }
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
+
   Hive.registerAdapter(PlantRecordAdapter());
+  Hive.registerAdapter(UserInfoAdapter());
+
   await Hive.openBox<PlantRecord>('plants_vault');
+  await bootstrapUserInfo();
 
   await dotenv.load(fileName: ".env");
   runApp(const FloraDexApp());
@@ -66,7 +94,7 @@ class _MainScreenState extends State<MainScreen> {
                   });
                 }
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => ResearcherProfileScreen()),
+                  MaterialPageRoute(builder: (_) => ResearcherProfileScreen(user: currentUser,)),
                 );
               },
               onLongPress: () {

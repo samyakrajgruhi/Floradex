@@ -48,6 +48,7 @@ dependencies:
   googleai_dart: 3.0.0
   langchain_ollama: ^0.4.1
   intl: ^0.20.3
+  uuid: ^4.5.3
 
 dev_dependencies:
   flutter_test:
