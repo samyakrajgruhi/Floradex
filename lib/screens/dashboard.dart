@@ -34,7 +34,7 @@ class DashboardPage extends StatelessWidget {
             color: AppTheme.primaryContainer,
             border: Border.all(color: AppTheme.onSurface, width: 4),
             boxShadow: const [
-              BoxShadow(color: AppTheme.onSurface, offset: Offset(4, 4)),
+              BoxShadow(color: AppTheme.onSurface, offset: Offset(3, 3)),
             ],
           ),
           padding: const EdgeInsets.all(AppTheme.space6),

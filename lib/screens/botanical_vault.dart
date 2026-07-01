@@ -129,48 +129,35 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: colorScheme
-                                .tertiaryContainer, // AppTheme.tertiaryContainer (#FFE08A)
+                                .primaryContainer, // AppTheme.tertiaryContainer (#FFE08A)
                             border: Border.all(
                               color: colorScheme.onSurface,
                               width: 2,
                             ),
                           ),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               Text(
                                 'TOTAL DISCOVERED',
                                 style: textTheme.labelSmall?.copyWith(
                                   fontFamily: 'Press Start 2P',
-                                  fontSize: 8,
+                                  fontSize: 12,
                                   color: colorScheme.onSurface,
                                 ),
                               ),
                               const SizedBox(height: 8),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '42',
-                                    style: textTheme.headlineMedium?.copyWith(
-                                      fontFamily: 'Press Start 2P',
-                                      fontWeight: FontWeight.bold,
-                                      color: colorScheme.onSurface,
-                                    ),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 4.0),
+                                child: Text(
+                                  '21 SPECIES',
+                                  style: textTheme.bodySmall?.copyWith(
+                                    fontFamily: 'Space Grotesk',
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.onSurface,
+                                    fontSize: 18,
                                   ),
-                                  const SizedBox(width: 8),
-                                  Padding(
-                                    padding: const EdgeInsets.only(bottom: 4.0),
-                                    child: Text(
-                                      '/ 151 SPECIES',
-                                      style: textTheme.bodySmall?.copyWith(
-                                        fontFamily: 'Space Grotesk',
-                                        fontWeight: FontWeight.bold,
-                                        color: colorScheme.onSurface,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                                ),
                               ),
                               const SizedBox(height: 12),
                               // Simple 8-bit Progress Bar
@@ -193,13 +180,14 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
 
                     // Rank Badge Card
                     Expanded(
-                      flex: 1,
+                      flex: 2,
                       child: _PixelShadowContainer(
                         child: Container(
                           // Removed hardcoded height to allow stretching
+                          width: double.infinity,
                           decoration: BoxDecoration(
                             color: colorScheme
-                                .primaryContainer, // AppTheme.primaryContainer (#8EFE91)
+                                .tertiaryContainer, // AppTheme.primaryContainer (#8EFE91)
                             border: Border.all(
                               color: colorScheme.onSurface,
                               width: 2,
@@ -218,7 +206,7 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
                                 textAlign: TextAlign.center,
                                 style: textTheme.labelSmall?.copyWith(
                                   fontFamily: 'Press Start 2P',
-                                  fontSize: 7,
+                                  fontSize: 12,
                                   color: colorScheme.onPrimaryContainer,
                                 ),
                               ),
@@ -246,7 +234,8 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
                             imagePath: PlantRecords[index].imagePath,
                             tagLabel: '',
                             tagColor: null,
-                            timestamp: PlantRecords[index].timestamp, // Replace with real asset/network
+                            timestamp: PlantRecords[index]
+                                .timestamp, // Replace with real asset/network
                           );
                         },
                         gridDelegate:
@@ -278,10 +267,10 @@ class _PixelShadowContainer extends StatelessWidget {
       children: [
         // Shadow block
         Positioned(
-          top: 6,
-          left: 6,
-          right: -6,
-          bottom: -6,
+          top: 3,
+          left: 3,
+          right: -3,
+          bottom: -3,
           child: Container(
             color: const Color(0xFF383833), // onSurface for shadow
           ),
@@ -307,7 +296,7 @@ class _PlantDataChip extends StatelessWidget {
     required this.imagePath,
     required this.tagLabel,
     required this.tagColor,
-    required this.timestamp
+    required this.timestamp,
   });
 
   @override
@@ -388,7 +377,7 @@ class _PlantDataChip extends StatelessWidget {
                     color: colorScheme.outline,
                   ),
                 ),
-                const SizedBox(height: 4,),
+                const SizedBox(height: 4),
                 Text(
                   DateFormat('MMM d, yyyy h:mm a').format(timestamp),
                   style: textTheme.bodySmall?.copyWith(
@@ -397,7 +386,7 @@ class _PlantDataChip extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: colorScheme.outline,
                   ),
-                )
+                ),
               ],
             ),
           ),
