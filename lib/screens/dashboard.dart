@@ -1,8 +1,10 @@
+import 'package:floradex/models/user_info.dart';
 import 'package:floradex/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class DashboardPage extends StatelessWidget {
-  const DashboardPage({super.key});
+  final UserInfo user;
+  const DashboardPage({required this.user,super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +52,7 @@ class DashboardPage extends StatelessWidget {
               ),
               const SizedBox(height: AppTheme.space2),
               Text(
-                '42',
+                "${user.userProgress}",
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
                   color: AppTheme.primaryDim,
                   fontSize: 64,

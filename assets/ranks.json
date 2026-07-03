@@ -1,0 +1,114 @@
+[
+    {
+        "id": "wild_seed",
+        "title": "Wild Seed",
+        "threshold": 0,
+        "dashboardText": "Welcome - every discovery counts.",
+        "popupText": "You have taken root in the world of flora. Keep scanning to grow.",
+        "icon": "assets/icons/wild_seed.png"
+    },
+    {
+        "id": "sprout_seeker",
+        "title": "Sprout Seeker",
+        "threshold": 1,
+        "dashboardText": "You are just getting started, and the sprouting has begun.",
+        "popupText": "Sprout Seeker unlocked. Your curiosity is starting to bloom.",
+        "icon": "assets/icons/sprout_seeker.png"
+    },
+    {
+        "id": "seedling",
+        "title": "Seedling",
+        "threshold": 3,
+        "dashboardText": "A small seedling today, a strong botanist tomorrow.",
+        "popupText": "Seedling reached. Your growth is becoming visible.",
+        "icon": "assets/icons/seedling.png"
+    },
+    {
+        "id": "sapling",
+        "title": "Sapling",
+        "threshold": 6,
+        "dashboardText": "You are growing steady and strong like a young sapling.",
+        "popupText": "Sapling achieved. Your foundation is getting stronger.",
+        "icon": "assets/icons/sapling.png"
+    },
+    {
+        "id": "forager",
+        "title": "Forager",
+        "threshold": 10,
+        "dashboardText": "You are learning how to search, gather, and discover with purpose.",
+        "popupText": "Forager unlocked. You are becoming more resourceful.",
+        "icon": "assets/icons/forager.png"
+    },
+    {
+        "id": "wildflower_scout",
+        "title": "Wildflower Scout",
+        "threshold": 15,
+        "dashboardText": "You are spotting beauty in the wild and moving with purpose.",
+        "popupText": "Wildflower Scout achieved. Your eye for discovery is sharpening.",
+        "icon": "assets/icons/wildflower_scout.png"
+    },
+    {
+        "id": "naturalist",
+        "title": "Naturalist",
+        "threshold": 22,
+        "dashboardText": "You are starting to understand nature as a living system.",
+        "popupText": "Naturalist unlocked. Your observation skills are improving.",
+        "icon": "assets/icons/naturalist.png"
+    },
+    {
+        "id": "botanist",
+        "title": "Botanist",
+        "threshold": 30,
+        "dashboardText": "You are becoming a true botanist, one discovery at a time.",
+        "popupText": "Botanist achieved. You are building real plant knowledge.",
+        "icon": "assets/icons/botanist.png"
+    },
+    {
+        "id": "field_researcher",
+        "title": "Field Researcher",
+        "threshold": 40,
+        "dashboardText": "You are no longer just exploring - you are researching.",
+        "popupText": "Field Researcher unlocked. Your field work is paying off.",
+        "icon": "assets/icons/field_researcher.png"
+    },
+    {
+        "id": "flora_specialist",
+        "title": "Flora Specialist",
+        "threshold": 55,
+        "dashboardText": "Your knowledge of plants is becoming highly focused and reliable.",
+        "popupText": "Flora Specialist achieved. You are gaining expert-level insight.",
+        "icon": "assets/icons/flora_specialist.png"
+    },
+    {
+        "id": "forest_warden",
+        "title": "Forest Warden",
+        "threshold": 75,
+        "dashboardText": "You are now a guardian of the wild spaces you study.",
+        "popupText": "Forest Warden unlocked. Your bond with nature is stronger than ever.",
+        "icon": "assets/icons/forest_warden.png"
+    },
+    {
+        "id": "master_botanist",
+        "title": "Master Botanist",
+        "threshold": 100,
+        "dashboardText": "You are becoming a master botanist. Your path is impressive.",
+        "popupText": "Master Botanist achieved. You have reached a major milestone.",
+        "icon": "assets/icons/master_botanist.png"
+    },
+    {
+        "id": "botanical_sage",
+        "title": "Botanical Sage",
+        "threshold": 140,
+        "dashboardText": "You have become a Botanical Sage, a true keeper of plant wisdom.",
+        "popupText": "Botanical Sage unlocked. Your knowledge of flora now guides your every discovery.",
+        "icon": "assets/icons/botanical_sage.png"
+    },
+    {
+        "id": "floradex_legend",
+        "title": "Floradex Legend",
+        "threshold": 200,
+        "dashboardText": "You have become a Floradex Legend. Few reach this far.",
+        "popupText": "Floradex Legend achieved. Your journey has reached legendary status.",
+        "icon": "assets/icons/floradex_legend.png"
+    }
+]

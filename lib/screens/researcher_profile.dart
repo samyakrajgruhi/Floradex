@@ -2,7 +2,6 @@
 
 import 'package:floradex/models/user_info.dart';
 import 'package:floradex/services/database_service.dart';
-import 'package:floradex/services/user_service.dart';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 

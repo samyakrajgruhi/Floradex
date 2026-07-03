@@ -1,0 +1,24 @@
+[
+    {
+        "id" : "wild_seed",
+        "title" : "Wild Seed",
+        "threshold" : 0,
+        "dashboardText" : "Welcome - every discovery counts.",
+        "popupText" : "You've joined the world of flora."
+    },
+    {
+        "id" : "sprout_seeker",
+        "title" : "Sprout Seeker",
+        "threshold" : 5,
+        "dashboardText" : "You're sprouting as a seeker of plants.",
+        "popupText" : "Nice! You're a Sprout Seeker now - 5 discoveries unlocked."
+    },
+    {
+        "id" : "bloom_collector",
+        "title" : "Bloom Collector",
+        "threshold" : 5,
+        "dashboardText" : "You're sprouting as a seeker of plants.",
+        "popupText" : "Nice! You're a Sprout Seeker now - 5 discoveries unlocked."
+    },
+    
+]
