@@ -15,7 +15,7 @@ class Rank {
     required this.threshold,
     required this.dashboardText,
     required this.popupText,
-    required this.iconPath
+    required this.iconPath,
   });
 
   factory Rank.fromJson(Map<String, dynamic> j) => Rank(
@@ -24,7 +24,7 @@ class Rank {
     threshold: j['threshold'] as int,
     dashboardText: j['dashboardText'] as String,
     popupText: j['popupText'] as String,
-    iconPath: j['icon'] as String
+    iconPath: j['icon'] as String,
   );
 }
 
