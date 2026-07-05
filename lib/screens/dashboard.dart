@@ -2,9 +2,23 @@ import 'package:floradex/models/user_info.dart';
 import 'package:floradex/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   final UserInfo user;
-  const DashboardPage({required this.user,super.key});
+  const DashboardPage({required this.user, super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  static const String _currentRankTitle = 'BOTANIST';
+  static const String _currentRankIcon = 'assets/icons/botanist.png';
+  static const int _plantsDiscovered = 26;
+  static const String _dashboardSentence =
+      'YOUR FIELD NOTES ARE DEEPENING AS YOU MOVE CLOSER TO THE NEXT RANK.';
+  static const int _previousRankThreshold = 22;
+  static const int _nextRankThreshold = 30;
+  static const double _progressToNextRank = 0.5;
 
   @override
   Widget build(BuildContext context) {
@@ -27,64 +41,184 @@ class DashboardPage extends StatelessWidget {
   }
 
   Widget _buildHeroCard(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: AppTheme.primaryContainer,
-            border: Border.all(color: AppTheme.onSurface, width: 4),
-            boxShadow: const [
-              BoxShadow(color: AppTheme.onSurface, offset: Offset(3, 3)),
-            ],
-          ),
-          padding: const EdgeInsets.all(AppTheme.space6),
-          child: Column(
+    return FloraGhostBorder(
+      child: Container(
+        width: double.infinity,
+        color: AppTheme.surfaceContainerLow,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              color: AppTheme.primaryContainer,
+              padding: const EdgeInsets.all(AppTheme.space4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'CURRENT RANK',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.outline,
+                              ),
+                        ),
+                        const SizedBox(height: AppTheme.space1),
+                        Text(
+                          _currentRankTitle,
+                          style: Theme.of(context).textTheme.displayMedium
+                              ?.copyWith(
+                                color: AppTheme.primaryDim,
+                                fontSize: 18,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    color: AppTheme.surfaceContainerLowest,
+                    padding: const EdgeInsets.all(AppTheme.space2),
+                    child: Image.asset(
+                      _currentRankIcon,
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              color: AppTheme.surfaceContainerLowest,
+              padding: const EdgeInsets.all(AppTheme.space4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'PLANTS DISCOVERED',
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.outline,
+                              ),
+                        ),
+                        const SizedBox(height: AppTheme.space4),
+                        Text(
+                          '$_plantsDiscovered',
+                          style: Theme.of(context).textTheme.displayLarge
+                              ?.copyWith(
+                                color: AppTheme.primaryDim,
+                                fontSize: 56,
+                                height: 1.0,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.space4),
+                  Text(
+                    _dashboardSentence,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.space4),
+                  _buildRankProgressBar(context),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRankProgressBar(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceContainerHigh,
+        border: Border.all(color: AppTheme.primary),
+      ),
+
+      padding: const EdgeInsets.all(AppTheme.space3),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'PLANTS DISCOVERED',
-                style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                  color: AppTheme.onSurface,
-                  fontSize: 12,
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.tertiaryContainer,
+                  border: Border.all(color: Colors.black),
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppTheme.space2),
-              Text(
-                "${user.userProgress}",
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  color: AppTheme.primaryDim,
-                  fontSize: 64,
-                  height: 1.0,
+                padding: EdgeInsetsGeometry.all(4),
+                child: Text(
+                  '$_previousRankThreshold',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.onSurface,
+                  ),
                 ),
-                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: AppTheme.space3),
-              Text(
-                "YOU'RE BECOMING A MASTER BOTANIST!",
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontSize: 8,
-                  color: AppTheme.onSurface,
-                  height: 1.5,
+              Container(
+                padding: EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: AppTheme.tertiaryContainer,
+                  border: Border.all(color: Colors.black),
                 ),
-                textAlign: TextAlign.center,
+                child: Text(
+                  '$_nextRankThreshold',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.onSurface,
+                    backgroundColor: AppTheme.tertiaryContainer,
+                  ),
+                ),
               ),
-              const SizedBox(height: AppTheme.space4),
-              const FloraProgressBar(value: 0.72),
             ],
           ),
-        ),
-        Positioned(
-          top: -12,
-          right: -12,
-          child: Icon(
-            Icons.energy_savings_leaf,
-            size: 48,
-            color: AppTheme.primary,
+          const SizedBox(height: AppTheme.space2),
+          Container(
+            height: 12,
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceContainerHighest,
+              border: Border.all(color: Colors.black),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: _progressToNextRank,
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF4CAF50), AppTheme.primary],
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
-      ],
+          const SizedBox(height: AppTheme.space1),
+          Text(
+            'PROGRESS TO NEXT RANK',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: AppTheme.outline,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
