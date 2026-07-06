@@ -1,9 +1,26 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:floradex/models/user_info.dart';
+import 'package:floradex/services/rank_service.dart';
+import 'package:floradex/services/user_service.dart';
+import 'package:floradex/theme/app_theme.dart';
+import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:floradex/models/plant_record.dart';
 import 'package:floradex/services/database_service.dart';
 import 'package:flutter/material.dart';
+
+class VaultData {
+  UserInfo user;
+  Rank? currentRank;
+  double progress;
+
+  VaultData({
+    required this.user,
+    required this.currentRank,
+    required this.progress,
+  });
+}
 
 const List<_StaticRankEntry> _rankTimeline = [
   _StaticRankEntry(
@@ -101,12 +118,25 @@ class BotanicalVaultPage extends StatefulWidget {
 
 class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
   final dbService = DatabaseService();
+  final userService = UserService();
+  final rankService = RankService();
+
   List<PlantRecord> PlantRecords = [];
+  late Future<VaultData> vaultData;
 
   @override
   void initState() {
     super.initState();
     _loadPlants();
+    vaultData = loadVaultData();
+  }
+
+  Future<VaultData> loadVaultData() async {
+    final user = await userService.getUserInfo();
+    final currentRank = await rankService.getRankForProgress(user.userProgress);
+    final progress = await rankService.progressRatioToNext(user.userProgress);
+
+    return VaultData(user: user, currentRank: currentRank, progress: progress);
   }
 
   Future<void> _loadPlants() async {
@@ -143,181 +173,158 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface, // AppTheme.surface (#FDFFDA)
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 24),
+    return FutureBuilder(
+      future: vaultData,
+      builder: (context, asyncSnapshot) {
+        if (asyncSnapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-              // SEARCH SECTION
-              Text(
-                'SEARCH CATALOG',
-                style: textTheme.labelSmall?.copyWith(
-                  fontFamily: 'Press Start 2P',
-                  color: colorScheme.primary, // AppTheme.primary (#007523)
-                  fontSize: 10,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        final data = asyncSnapshot.data;
+        if (data == null) {
+          return const Center(child: Text('No Data!!'));
+        }
+        return Scaffold(
+          backgroundColor: colorScheme.surface, // AppTheme.surface (#FDFFDA)
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerLowest, // #FFFFFF
-                        border: Border(
-                          bottom: BorderSide(
-                            color: colorScheme.primary,
-                            width: 4, // Thick 8-bit border
-                          ),
-                        ),
-                      ),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'TYPE PLANT NAME...',
-                          hintStyle: textTheme.bodyMedium?.copyWith(
-                            fontFamily: 'Space Grotesk',
-                            color: colorScheme.outline,
-                          ),
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: colorScheme.outline,
-                          ),
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                          ),
-                        ),
-                        style: textTheme.bodyMedium?.copyWith(
-                          fontFamily: 'Manrope',
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  // Filter Button (Tactile Switch)
-                  _PixelShadowContainer(
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: colorScheme
-                            .secondary, // AppTheme.secondary (#9A511E)
-                        border: Border.all(
-                          color: colorScheme.onSurface,
-                          width: 2,
-                        ),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.filter_list, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-              // STATS ROW SECTION
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Total Discovered Card
-                    Expanded(
-                      flex: 2,
-                      child: _PixelShadowContainer(
+                  // SEARCH SECTION
+                  Text(
+                    'SEARCH CATALOG',
+                    style: textTheme.labelSmall?.copyWith(
+                      fontFamily: 'Press Start 2P',
+                      color: colorScheme.primary, // AppTheme.primary (#007523)
+                      fontSize: 10,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
                         child: Container(
-                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color:
+                                colorScheme.surfaceContainerLowest, // #FFFFFF
+                            border: Border(
+                              bottom: BorderSide(
+                                color: colorScheme.primary,
+                                width: 4, // Thick 8-bit border
+                              ),
+                            ),
+                          ),
+                          child: TextField(
+                            decoration: InputDecoration(
+                              hintText: 'TYPE PLANT NAME...',
+                              hintStyle: textTheme.bodyMedium?.copyWith(
+                                fontFamily: 'Space Grotesk',
+                                color: colorScheme.outline,
+                              ),
+                              prefixIcon: Icon(
+                                Icons.search,
+                                color: colorScheme.outline,
+                              ),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 16,
+                              ),
+                            ),
+                            style: textTheme.bodyMedium?.copyWith(
+                              fontFamily: 'Manrope',
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Filter Button (Tactile Switch)
+                      _PixelShadowContainer(
+                        child: Container(
+                          width: 56,
+                          height: 56,
                           decoration: BoxDecoration(
                             color: colorScheme
-                                .primaryContainer, // AppTheme.tertiaryContainer (#FFE08A)
+                                .secondary, // AppTheme.secondary (#9A511E)
                             border: Border.all(
                               color: colorScheme.onSurface,
                               width: 2,
                             ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                'TOTAL DISCOVERED',
-                                style: textTheme.labelSmall?.copyWith(
-                                  fontFamily: 'Press Start 2P',
-                                  fontSize: 12,
-                                  color: colorScheme.onSurface,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 4.0),
-                                child: Text(
-                                  '21 SPECIES',
-                                  style: textTheme.bodySmall?.copyWith(
-                                    fontFamily: 'Space Grotesk',
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.onSurface,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              // Simple 8-bit Progress Bar
-                              Container(
-                                height: 8,
-                                width: double.infinity,
-                                color: colorScheme.surfaceContainerHighest,
-                                alignment: Alignment.centerLeft,
-                                child: FractionallySizedBox(
-                                  widthFactor: 42 / 151,
-                                  child: Container(color: colorScheme.primary),
-                                ),
-                              ),
-                            ],
+                          child: const Center(
+                            child: Icon(Icons.filter_list, color: Colors.white),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
 
-                    // Rank Badge Card
-                    Expanded(
-                      flex: 2,
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: _showRankTimelineDialog,
+                  // STATS ROW SECTION
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Total Discovered Card
+                        Expanded(
+                          flex: 2,
                           child: _PixelShadowContainer(
                             child: Container(
-                              // Removed hardcoded height to allow stretching
-                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: colorScheme
-                                    .tertiaryContainer, // AppTheme.primaryContainer (#8EFE91)
+                                    .primaryContainer, // AppTheme.tertiaryContainer (#FFE08A)
                                 border: Border.all(
                                   color: colorScheme.onSurface,
                                   width: 2,
                                 ),
                               ),
                               child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  Icon(
-                                    Icons.emoji_events_outlined,
-                                    color: colorScheme.onPrimaryContainer,
-                                  ),
-                                  const SizedBox(height: 8),
                                   Text(
-                                    'MASTER\nRANGER',
-                                    textAlign: TextAlign.center,
+                                    'TOTAL DISCOVERED',
                                     style: textTheme.labelSmall?.copyWith(
                                       fontFamily: 'Press Start 2P',
                                       fontSize: 12,
-                                      color: colorScheme.onPrimaryContainer,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 4.0),
+                                    child: Text(
+                                      '${data.user.userProgress} SPECIES',
+                                      style: textTheme.bodySmall?.copyWith(
+                                        fontFamily: 'Space Grotesk',
+                                        fontWeight: FontWeight.bold,
+                                        color: colorScheme.onSurface,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // Simple 8-bit Progress Bar
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color:
+                                          colorScheme.surfaceContainerHighest,
+                                      border: Border.all(
+                                        color: AppTheme.onPrimaryContainer,
+                                      ),
+                                    ),
+                                    height: 8,
+                                    width: double.infinity,
+                                    alignment: Alignment.centerLeft,
+                                    child: FractionallySizedBox(
+                                      widthFactor: data.progress,
+                                      child: Container(
+                                        color: colorScheme.primary,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -325,44 +332,94 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
                             ),
                           ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
-              ), // Close IntrinsicHeight
-              const SizedBox(height: 32),
+                        const SizedBox(width: 16),
 
-              // GRID SECTION
-              Expanded(
-                child: PlantRecords.isEmpty
-                    ? const Center(child: Text('No Plants Discovered Yet.'))
-                    : GridView.builder(
-                        itemCount: PlantRecords.length,
-                        itemBuilder: (context, index) {
-                          return _PlantDataChip(
-                            name: PlantRecords[index].plantName,
-                            scientificName: PlantRecords[index]
-                                .scientificName, // Reddish tag
-                            imagePath: PlantRecords[index].imagePath,
-                            tagLabel: '',
-                            tagColor: null,
-                            timestamp: PlantRecords[index]
-                                .timestamp, // Replace with real asset/network
-                          );
-                        },
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                              childAspectRatio: 0.8,
+                        // Rank Badge Card
+                        Expanded(
+                          flex: 1,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: _showRankTimelineDialog,
+                              child: _PixelShadowContainer(
+                                child: Container(
+                                  // Removed hardcoded height to allow stretching
+                                  padding: EdgeInsets.only(top: 8, bottom: 8),
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: colorScheme
+                                        .tertiaryContainer, // AppTheme.primaryContainer (#8EFE91)
+                                    border: Border.all(
+                                      color: colorScheme.onSurface,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: EdgeInsets.all(8),
+                                        color: AppTheme.onPrimary,
+                                        child: Image.asset(
+                                          data.currentRank!.iconPath,
+                                          height: 46,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        data.currentRank!.title,
+                                        textAlign: TextAlign.center,
+                                        style: textTheme.labelMedium?.copyWith(
+                                          fontFamily: 'Press Start 2P',
+                                          fontSize: 16,
+                                          color: colorScheme.onPrimaryContainer,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
-                      ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ), // Close IntrinsicHeight
+                  const SizedBox(height: 32),
+
+                  // GRID SECTION
+                  Expanded(
+                    child: PlantRecords.isEmpty
+                        ? const Center(child: Text('No Plants Discovered Yet.'))
+                        : GridView.builder(
+                            itemCount: PlantRecords.length,
+                            itemBuilder: (context, index) {
+                              return _PlantDataChip(
+                                name: PlantRecords[index].plantName,
+                                scientificName: PlantRecords[index]
+                                    .scientificName, // Reddish tag
+                                imagePath: PlantRecords[index].imagePath,
+                                tagLabel: '',
+                                tagColor: null,
+                                timestamp: PlantRecords[index]
+                                    .timestamp, // Replace with real asset/network
+                              );
+                            },
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 16,
+                                  childAspectRatio: 0.8,
+                                ),
+                          ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
