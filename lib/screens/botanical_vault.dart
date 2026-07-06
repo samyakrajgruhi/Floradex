@@ -4,7 +4,6 @@ import 'package:floradex/models/user_info.dart';
 import 'package:floradex/services/rank_service.dart';
 import 'package:floradex/services/user_service.dart';
 import 'package:floradex/theme/app_theme.dart';
-import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:floradex/models/plant_record.dart';
 import 'package:floradex/services/database_service.dart';

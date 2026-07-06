@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:floradex/models/plant_record.dart';
+import 'package:floradex/services/user_service.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -45,6 +46,9 @@ class DatabaseService {
           (plantDetails['facts'] as List?)?.map((e) => e.toString()).toList() ??
           []
       ..timestamp = currentTime;
+
+    final userService = UserService();
+    userService.incrementProgress(1);
 
     await box.put(itemId, finalPlantRecord);
   }
