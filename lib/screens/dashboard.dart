@@ -6,6 +6,7 @@ import 'package:floradex/services/database_service.dart';
 import 'package:floradex/services/rank_service.dart';
 import 'package:floradex/services/user_service.dart';
 import 'package:floradex/theme/app_theme.dart';
+import 'package:floradex/widgets/rank_timeline.dart';
 import 'package:flutter/material.dart';
 
 class DashboardData {
@@ -23,7 +24,8 @@ class DashboardData {
 }
 
 class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key});
+  final VoidCallback onViewAllTap;
+  const DashboardPage({super.key, required this.onViewAllTap});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -154,14 +156,17 @@ class _DashboardPageState extends State<DashboardPage> {
                       ],
                     ),
                   ),
-                  Container(
-                    color: AppTheme.surfaceContainerLowest,
-                    padding: const EdgeInsets.all(AppTheme.space2),
-                    child: Image.asset(
-                      data.currentRank.iconPath,
-                      width: 56,
-                      height: 56,
-                      fit: BoxFit.contain,
+                  InkWell(
+                    onTap: () => showRankTimelineDialog(context),
+                    child: Container(
+                      color: AppTheme.surfaceContainerLowest,
+                      padding: const EdgeInsets.all(AppTheme.space2),
+                      child: Image.asset(
+                        data.currentRank.iconPath,
+                        width: 56,
+                        height: 56,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 ],
@@ -318,11 +323,14 @@ class _DashboardPageState extends State<DashboardPage> {
                 context,
               ).textTheme.displaySmall?.copyWith(color: AppTheme.secondary),
             ),
-            Text(
-              'VIEW ALL',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.outline,
+            InkWell(
+              onTap: widget.onViewAllTap,
+              child: Text(
+                'VIEW ALL',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.outline,
+                ),
               ),
             ),
           ],

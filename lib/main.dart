@@ -17,7 +17,7 @@ Future<void> bootstrapUserInfo() async {
   final userBox = await Hive.openBox<UserInfo>('user_data');
   final uuid = Uuid();
   final storedUser = userBox.get('current_user');
-  
+
   if (storedUser == null) {
     final defaultUser = UserInfo()
       ..userId = uuid.v8()
@@ -71,11 +71,23 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [
-    DashboardPage(),
-    ScannerPage(),
-    BotanicalVaultPage(),
-  ];
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _pages = [
+      DashboardPage(
+        onViewAllTap: () {
+          setState(() {
+            _currentIndex = 2;
+          });
+        },
+      ),
+      ScannerPage(),
+      BotanicalVaultPage(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +106,9 @@ class _MainScreenState extends State<MainScreen> {
                   });
                 }
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => ResearcherProfileScreen(user: currentUser,)),
+                  MaterialPageRoute(
+                    builder: (_) => ResearcherProfileScreen(user: currentUser),
+                  ),
                 );
               },
               onLongPress: () {
