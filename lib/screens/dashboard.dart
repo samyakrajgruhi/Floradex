@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:floradex/models/plant_record.dart';
 import 'package:floradex/models/user_info.dart';
+import 'package:floradex/services/database_service.dart';
 import 'package:floradex/services/rank_service.dart';
 import 'package:floradex/services/user_service.dart';
 import 'package:floradex/theme/app_theme.dart';
@@ -28,6 +32,9 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   final userService = UserService();
   final rankService = RankService();
+  final dataBaseService = DatabaseService();
+
+  late Future<List<PlantRecord>> recentDiscoveries;
 
   late Future<DashboardData> dashboardData;
 
@@ -35,6 +42,7 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     dashboardData = loadDashboardData();
+    recentDiscoveries = dataBaseService.getRecentDiscoveries();
   }
 
   Future<DashboardData> loadDashboardData() async {
@@ -70,9 +78,23 @@ class _DashboardPageState extends State<DashboardPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildHeroCard(context,data!),
+              _buildHeroCard(context, data!),
               const SizedBox(height: AppTheme.space6),
-              _buildRecentDiscoveryRow(context),
+              FutureBuilder<List<PlantRecord>>(
+                future: recentDiscoveries,
+                builder: (context, asyncSnapshot) {
+                  if (asyncSnapshot.connectionState != ConnectionState.done) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (asyncSnapshot.hasError) {
+                    return const Text('Failed to load recent discoveries');
+                  }
+
+                  final plants = asyncSnapshot.data ?? [];
+                  return _buildRecentDiscoveryRow(context, plants);
+                },
+              ),
               const SizedBox(height: AppTheme.space6),
               _buildBotanicalFact(context),
               const SizedBox(height: AppTheme.space6),
@@ -85,7 +107,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildHeroCard(BuildContext context,DashboardData data) {
+  Widget _buildHeroCard(BuildContext context, DashboardData data) {
     return FloraGhostBorder(
       child: Container(
         width: double.infinity,
@@ -183,7 +205,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
                   ),
                   const SizedBox(height: AppTheme.space4),
-                  _buildRankProgressBar(context,data!),
+                  _buildRankProgressBar(context, data),
                 ],
               ),
             ),
@@ -193,7 +215,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildRankProgressBar(BuildContext context,DashboardData data) {
+  Widget _buildRankProgressBar(BuildContext context, DashboardData data) {
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.surfaceContainerHigh,
@@ -274,7 +296,16 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildRecentDiscoveryRow(BuildContext context) {
+  Widget _buildRecentDiscoveryRow(
+    BuildContext context,
+    List<PlantRecord> plants,
+  ) {
+    final items = plants.take(2).toList();
+
+    if (items.isEmpty) {
+      return const Text('No discoveries yet');
+    }
+
     return Column(
       children: [
         Row(
@@ -298,25 +329,16 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
         const SizedBox(height: AppTheme.space4),
         Row(
-          children: [
-            Expanded(
+          children: items.map((plant) {
+            return Expanded(
               child: _buildPlantCard(
                 context,
-                title: 'JADE PLANT',
-                subtitle: 'Crassula ovata',
-                iconData: Icons.yard_outlined,
+                title: plant.plantName,
+                subtitle: plant.scientificName,
+                imagePath: plant.imagePath,
               ),
-            ),
-            const SizedBox(width: AppTheme.space4),
-            Expanded(
-              child: _buildPlantCard(
-                context,
-                title: 'MONSTERA',
-                subtitle: 'M. deliciosa',
-                iconData: Icons.eco_outlined,
-              ),
-            ),
-          ],
+            );
+          }).toList(),
         ),
       ],
     );
@@ -326,7 +348,7 @@ class _DashboardPageState extends State<DashboardPage> {
     BuildContext context, {
     required String title,
     required String subtitle,
-    required IconData iconData,
+    required String imagePath,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -340,7 +362,12 @@ class _DashboardPageState extends State<DashboardPage> {
             height: 120,
             color: AppTheme.surfaceContainerHigh,
             alignment: Alignment.center,
-            child: Icon(iconData, size: 64, color: AppTheme.primary),
+            child: Image.file(
+              File(imagePath),
+              width: double.infinity,
+              height: double.infinity,
+              fit: BoxFit.cover,
+            ),
           ),
           Container(
             decoration: const BoxDecoration(
