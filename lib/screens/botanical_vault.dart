@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:floradex/services/rank_service.dart';
 import 'package:intl/intl.dart';
 import 'package:floradex/models/plant_record.dart';
 import 'package:floradex/services/database_service.dart';

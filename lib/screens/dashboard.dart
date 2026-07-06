@@ -44,12 +44,21 @@ class _DashboardPageState extends State<DashboardPage> {
     return FloraGhostBorder(
       child: Container(
         width: double.infinity,
-        color: AppTheme.surfaceContainerLow,
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceContainerLow,
+          border: Border.all(color: AppTheme.primary, width: 2),
+        ),
+
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              color: AppTheme.primaryContainer,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryContainer,
+                border: Border(
+                  bottom: BorderSide(color: AppTheme.primary, width: 2),
+                ),
+              ),
               padding: const EdgeInsets.all(AppTheme.space4),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -97,30 +106,28 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'PLANTS DISCOVERED',
-                          style: Theme.of(context).textTheme.labelMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: AppTheme.outline,
-                              ),
-                        ),
-                        const SizedBox(height: AppTheme.space4),
-                        Text(
-                          '$_plantsDiscovered',
-                          style: Theme.of(context).textTheme.displayLarge
-                              ?.copyWith(
-                                color: AppTheme.primaryDim,
-                                fontSize: 56,
-                                height: 1.0,
-                              ),
-                        ),
-                      ],
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'PLANTS DISCOVERED',
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.outline,
+                            ),
+                      ),
+                      const SizedBox(height: AppTheme.space4),
+                      Text(
+                        '$_plantsDiscovered',
+                        style: Theme.of(context).textTheme.displayLarge
+                            ?.copyWith(
+                              color: AppTheme.primaryDim,
+                              fontSize: 56,
+                              height: 1.0,
+                            ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: AppTheme.space4),
                   Text(
