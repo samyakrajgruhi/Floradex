@@ -329,16 +329,32 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
         const SizedBox(height: AppTheme.space4),
         Row(
-          children: items.map((plant) {
-            return Expanded(
-              child: _buildPlantCard(
-                context,
-                title: plant.plantName,
-                subtitle: plant.scientificName,
-                imagePath: plant.imagePath,
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(right: AppTheme.space2),
+                child: _buildPlantCard(
+                  context,
+                  title: items[0].plantName,
+                  subtitle: items[0].scientificName,
+                  imagePath: items[0].imagePath,
+                ),
               ),
-            );
-          }).toList(),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(left: AppTheme.space2),
+                child: _buildPlantCard(
+                  context,
+                  title: items.length > 1 ? items[1].plantName : '',
+                  subtitle: items.length > 1 ? items[1].scientificName : '',
+                  imagePath: items.length > 1
+                      ? items[1].imagePath
+                      : items[0].imagePath,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -358,15 +374,17 @@ class _DashboardPageState extends State<DashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            height: 120,
-            color: AppTheme.surfaceContainerHigh,
-            alignment: Alignment.center,
-            child: Image.file(
-              File(imagePath),
-              width: double.infinity,
-              height: double.infinity,
-              fit: BoxFit.cover,
+          SizedBox(
+            height: 145,
+            child: Container(
+              color: AppTheme.surfaceContainerHigh,
+              alignment: Alignment.center,
+              child: Image.file(
+                File(imagePath),
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           Container(
