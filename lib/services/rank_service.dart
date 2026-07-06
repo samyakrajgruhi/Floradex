@@ -29,7 +29,7 @@ class Rank {
 }
 
 class RankService {
-  static final RankService _i = RankService();
+  static final RankService _i = RankService._();
   factory RankService() => _i;
   RankService._();
 

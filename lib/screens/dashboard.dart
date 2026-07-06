@@ -1,46 +1,91 @@
 import 'package:floradex/models/user_info.dart';
+import 'package:floradex/services/rank_service.dart';
+import 'package:floradex/services/user_service.dart';
 import 'package:floradex/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
+class DashboardData {
+  UserInfo user;
+  Rank currentRank;
+  Rank? nextRank;
+  double progress;
+
+  DashboardData({
+    required this.user,
+    required this.currentRank,
+    required this.nextRank,
+    required this.progress,
+  });
+}
+
 class DashboardPage extends StatefulWidget {
-  final UserInfo user;
-  const DashboardPage({required this.user, super.key});
+  const DashboardPage({super.key});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  static const String _currentRankTitle = 'BOTANIST';
-  static const String _currentRankIcon = 'assets/icons/botanist.png';
-  static const int _plantsDiscovered = 26;
-  static const String _dashboardSentence =
-      'YOUR FIELD NOTES ARE DEEPENING AS YOU MOVE CLOSER TO THE NEXT RANK.';
-  static const int _previousRankThreshold = 22;
-  static const int _nextRankThreshold = 30;
-  static const double _progressToNextRank = 0.5;
+  final userService = UserService();
+  final rankService = RankService();
+
+  late Future<DashboardData> dashboardData;
 
   @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: AppTheme.pagePadding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildHeroCard(context),
-          const SizedBox(height: AppTheme.space6),
-          _buildRecentDiscoveryRow(context),
-          const SizedBox(height: AppTheme.space6),
-          _buildBotanicalFact(context),
-          const SizedBox(height: AppTheme.space6),
-          _buildStatsRow(context),
-          const SizedBox(height: AppTheme.space6),
-        ],
-      ),
+  void initState() {
+    super.initState();
+    dashboardData = loadDashboardData();
+  }
+
+  Future<DashboardData> loadDashboardData() async {
+    final user = await userService.getUserInfo();
+    final currentRank = await rankService.getRankForProgress(user.userProgress);
+    final nextRank = await rankService.getNextRank(user.userProgress);
+    final progress = await rankService.progressRatioToNext(user.userProgress);
+
+    return DashboardData(
+      user: user,
+      currentRank: currentRank!,
+      nextRank: nextRank,
+      progress: progress,
     );
   }
 
-  Widget _buildHeroCard(BuildContext context) {
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: dashboardData,
+      builder: (context, AsyncSnapshot) {
+        if (AsyncSnapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (AsyncSnapshot.hasError) {
+          return Center(child: Text('Failed to load Dashboard'));
+        }
+
+        final data = AsyncSnapshot.data;
+        return SingleChildScrollView(
+          padding: AppTheme.pagePadding,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildHeroCard(context,data!),
+              const SizedBox(height: AppTheme.space6),
+              _buildRecentDiscoveryRow(context),
+              const SizedBox(height: AppTheme.space6),
+              _buildBotanicalFact(context),
+              const SizedBox(height: AppTheme.space6),
+              _buildStatsRow(context),
+              const SizedBox(height: AppTheme.space6),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHeroCard(BuildContext context,DashboardData data) {
     return FloraGhostBorder(
       child: Container(
         width: double.infinity,
@@ -77,7 +122,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                         const SizedBox(height: AppTheme.space1),
                         Text(
-                          _currentRankTitle,
+                          data.currentRank.title,
                           style: Theme.of(context).textTheme.displayMedium
                               ?.copyWith(
                                 color: AppTheme.primaryDim,
@@ -91,7 +136,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     color: AppTheme.surfaceContainerLowest,
                     padding: const EdgeInsets.all(AppTheme.space2),
                     child: Image.asset(
-                      _currentRankIcon,
+                      data.currentRank.iconPath,
                       width: 56,
                       height: 56,
                       fit: BoxFit.contain,
@@ -119,7 +164,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                       const SizedBox(height: AppTheme.space4),
                       Text(
-                        '$_plantsDiscovered',
+                        '${data.user.userProgress}',
                         style: Theme.of(context).textTheme.displayLarge
                             ?.copyWith(
                               color: AppTheme.primaryDim,
@@ -131,14 +176,14 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                   const SizedBox(height: AppTheme.space4),
                   Text(
-                    _dashboardSentence,
+                    data.currentRank.dashboardText,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppTheme.onSurface,
                     ),
                   ),
                   const SizedBox(height: AppTheme.space4),
-                  _buildRankProgressBar(context),
+                  _buildRankProgressBar(context,data!),
                 ],
               ),
             ),
@@ -148,7 +193,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildRankProgressBar(BuildContext context) {
+  Widget _buildRankProgressBar(BuildContext context,DashboardData data) {
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.surfaceContainerHigh,
@@ -169,7 +214,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
                 padding: EdgeInsetsGeometry.all(4),
                 child: Text(
-                  '$_previousRankThreshold',
+                  '${data.currentRank.threshold}',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -184,7 +229,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   border: Border.all(color: Colors.black),
                 ),
                 child: Text(
-                  '$_nextRankThreshold',
+                  '${data.nextRank!.threshold}',
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
@@ -204,7 +249,7 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
             child: FractionallySizedBox(
               alignment: Alignment.centerLeft,
-              widthFactor: _progressToNextRank,
+              widthFactor: data.progress,
               child: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
