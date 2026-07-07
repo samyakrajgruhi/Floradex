@@ -34,15 +34,23 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
   final dbService = DatabaseService();
   final userService = UserService();
   final rankService = RankService();
+  final TextEditingController _searchController = TextEditingController();
 
   List<PlantRecord> PlantRecords = [];
   late Future<VaultData> vaultData;
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _loadPlants();
     vaultData = loadVaultData();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<VaultData> loadVaultData() async {
@@ -62,6 +70,109 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
     }
   }
 
+  List<PlantRecord> get _filteredPlantRecords {
+    final query = _normalizeSearchTerm(_searchQuery);
+    if (query.isEmpty) {
+      return PlantRecords;
+    }
+
+    final matches = PlantRecords.map((plant) {
+      final score = _fuzzyMatchScore(
+        query,
+        _normalizeSearchTerm(plant.plantName),
+      );
+      return _PlantSearchMatch(plant: plant, score: score);
+    }).where((match) => match.score > 0).toList()
+      ..sort((a, b) => b.score.compareTo(a.score));
+
+    return matches.map((match) => match.plant).toList();
+  }
+
+  String _normalizeSearchTerm(String value) {
+    return value
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '')
+        .trim();
+  }
+
+  double _fuzzyMatchScore(String query, String target) {
+    if (query.isEmpty || target.isEmpty) {
+      return 0;
+    }
+
+    if (target == query) {
+      return 100;
+    }
+
+    if (target.startsWith(query)) {
+      return 90 + (query.length / target.length);
+    }
+
+    if (target.contains(query)) {
+      return 75 + (query.length / target.length);
+    }
+
+    final subsequenceScore = _subsequenceScore(query, target);
+    final editScore = _editSimilarityScore(query, target);
+    return subsequenceScore > editScore ? subsequenceScore : editScore;
+  }
+
+  double _subsequenceScore(String query, String target) {
+    var queryIndex = 0;
+    var firstMatchIndex = -1;
+    var lastMatchIndex = -1;
+
+    for (var targetIndex = 0; targetIndex < target.length; targetIndex++) {
+      if (target[targetIndex] == query[queryIndex]) {
+        firstMatchIndex = firstMatchIndex == -1 ? targetIndex : firstMatchIndex;
+        lastMatchIndex = targetIndex;
+        queryIndex++;
+
+        if (queryIndex == query.length) {
+          final span = lastMatchIndex - firstMatchIndex + 1;
+          final compactness = query.length / span;
+          final coverage = query.length / target.length;
+          return 45 + (compactness * 20) + (coverage * 10);
+        }
+      }
+    }
+
+    return 0;
+  }
+
+  double _editSimilarityScore(String query, String target) {
+    final maxLength = query.length > target.length
+        ? query.length
+        : target.length;
+    final distance = _levenshteinDistance(query, target);
+    final similarity = 1 - (distance / maxLength);
+
+    return similarity >= 0.58 ? similarity * 70 : 0;
+  }
+
+  int _levenshteinDistance(String source, String target) {
+    final previous = List<int>.generate(target.length + 1, (index) => index);
+    final current = List<int>.filled(target.length + 1, 0);
+
+    for (var sourceIndex = 0; sourceIndex < source.length; sourceIndex++) {
+      current[0] = sourceIndex + 1;
+
+      for (var targetIndex = 0; targetIndex < target.length; targetIndex++) {
+        final substitutionCost =
+            source[sourceIndex] == target[targetIndex] ? 0 : 1;
+        current[targetIndex + 1] = [
+          current[targetIndex] + 1,
+          previous[targetIndex + 1] + 1,
+          previous[targetIndex] + substitutionCost,
+        ].reduce((value, element) => value < element ? value : element);
+      }
+
+      previous.setAll(0, current);
+    }
+
+    return previous[target.length];
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -79,6 +190,7 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
         if (data == null) {
           return const Center(child: Text('No Data!!'));
         }
+        final filteredPlantRecords = _filteredPlantRecords;
         return Scaffold(
           backgroundColor: colorScheme.surface, // AppTheme.surface (#FDFFDA)
           body: SafeArea(
@@ -115,6 +227,12 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
                             ),
                           ),
                           child: TextField(
+                            controller: _searchController,
+                            onChanged: (value) {
+                              setState(() {
+                                _searchQuery = value;
+                              });
+                            },
                             decoration: InputDecoration(
                               hintText: 'TYPE PLANT NAME...',
                               hintStyle: textTheme.bodyMedium?.copyWith(
@@ -125,6 +243,21 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
                                 Icons.search,
                                 color: colorScheme.outline,
                               ),
+                              suffixIcon: _searchQuery.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      tooltip: 'Clear search',
+                                      icon: Icon(
+                                        Icons.close,
+                                        color: colorScheme.outline,
+                                      ),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        setState(() {
+                                          _searchQuery = '';
+                                        });
+                                      },
+                                    ),
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.symmetric(
                                 vertical: 16,
@@ -284,63 +417,7 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
 
                   // GRID SECTION
                   Expanded(
-                    child: PlantRecords.isEmpty
-                        ? const Center(child: Text('No Plants Discovered Yet.'))
-                        : GridView.builder(
-                            itemCount: PlantRecords.length,
-                            itemBuilder: (context, index) {
-                              return InkWell(
-                                onTap: () {
-                                  final details = {
-                                    'common_name':
-                                        PlantRecords[index].plantName,
-                                    'scientific_name':
-                                        PlantRecords[index].scientificName,
-                                    'medical_uses':
-                                        PlantRecords[index].medicalUses,
-                                    'edibility': PlantRecords[index].edibility,
-                                    'taste': PlantRecords[index].taste,
-                                    'harvest_season':
-                                        PlantRecords[index].harvestSeason,
-                                    'growth_time':
-                                        PlantRecords[index].growthTime,
-                                    'origin': PlantRecords[index].origin,
-                                    'facts': PlantRecords[index].facts,
-                                  };
-
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => BotanicalDossierScreen(
-                                        plantName:
-                                            PlantRecords[index].plantName,
-                                        imagePath:
-                                            PlantRecords[index].imagePath,
-                                        plantDetails: details,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: _PlantDataChip(
-                                  name: PlantRecords[index].plantName,
-                                  scientificName: PlantRecords[index]
-                                      .scientificName, // Reddish tag
-                                  imagePath: PlantRecords[index].imagePath,
-                                  tagLabel: '',
-                                  tagColor: null,
-                                  timestamp: PlantRecords[index]
-                                      .timestamp, // Replace with real asset/network
-                                ),
-                              );
-                            },
-                            gridDelegate:
-                                const SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: 2,
-                                  crossAxisSpacing: 16,
-                                  mainAxisSpacing: 16,
-                                  childAspectRatio: 0.8,
-                                ),
-                          ),
+                    child: _buildPlantGrid(filteredPlantRecords),
                   ),
                 ],
               ),
@@ -350,6 +427,70 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
       },
     );
   }
+
+  Widget _buildPlantGrid(List<PlantRecord> filteredPlantRecords) {
+    if (PlantRecords.isEmpty) {
+      return const Center(child: Text('No Plants Discovered Yet.'));
+    }
+
+    if (filteredPlantRecords.isEmpty) {
+      return const Center(child: Text('No Matching Plants Found.'));
+    }
+
+    return GridView.builder(
+      itemCount: filteredPlantRecords.length,
+      itemBuilder: (context, index) {
+        final plant = filteredPlantRecords[index];
+        return InkWell(
+          onTap: () {
+            final details = {
+              'common_name': plant.plantName,
+              'scientific_name': plant.scientificName,
+              'medical_uses': plant.medicalUses,
+              'edibility': plant.edibility,
+              'taste': plant.taste,
+              'harvest_season': plant.harvestSeason,
+              'growth_time': plant.growthTime,
+              'origin': plant.origin,
+              'facts': plant.facts,
+            };
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => BotanicalDossierScreen(
+                  plantName: plant.plantName,
+                  imagePath: plant.imagePath,
+                  plantDetails: details,
+                ),
+              ),
+            );
+          },
+          child: _PlantDataChip(
+            name: plant.plantName,
+            scientificName: plant.scientificName, // Reddish tag
+            imagePath: plant.imagePath,
+            tagLabel: '',
+            tagColor: null,
+            timestamp: plant.timestamp, // Replace with real asset/network
+          ),
+        );
+      },
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        childAspectRatio: 0.8,
+      ),
+    );
+  }
+}
+
+class _PlantSearchMatch {
+  final PlantRecord plant;
+  final double score;
+
+  const _PlantSearchMatch({required this.plant, required this.score});
 }
 
 /// Helper widget to create the sharp right/bottom 8-bit shadow effect
