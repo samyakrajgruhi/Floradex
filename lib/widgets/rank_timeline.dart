@@ -149,7 +149,7 @@ void showRankTimelineDialog(BuildContext context) {
 class RankTimelineDialog extends StatelessWidget {
   final VoidCallback onClose;
 
-  const RankTimelineDialog({required this.onClose});
+  const RankTimelineDialog({super.key, required this.onClose});
 
   @override
   Widget build(BuildContext context) {

@@ -82,6 +82,8 @@ class _DashboardPageState extends State<DashboardPage> {
             children: [
               _buildHeroCard(context, data!),
               const SizedBox(height: AppTheme.space6),
+              _buildBotanicalFact(context),
+              const SizedBox(height: AppTheme.space6),
               FutureBuilder<List<PlantRecord>>(
                 future: recentDiscoveries,
                 builder: (context, asyncSnapshot) {
@@ -97,8 +99,6 @@ class _DashboardPageState extends State<DashboardPage> {
                   return _buildRecentDiscoveryRow(context, plants);
                 },
               ),
-              const SizedBox(height: AppTheme.space6),
-              _buildBotanicalFact(context),
               const SizedBox(height: AppTheme.space6),
               _buildStatsRow(context),
               const SizedBox(height: AppTheme.space6),
