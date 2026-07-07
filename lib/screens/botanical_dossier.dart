@@ -8,15 +8,17 @@ class BotanicalDossierScreen extends StatelessWidget {
   final String plantName;
   final Map<String, dynamic>? plantDetails;
   final XFile? plantImage;
+  final String? imagePath;
 
   const BotanicalDossierScreen({
     super.key,
     required this.plantName,
     this.plantDetails,
-    required this.plantImage,
+    this.plantImage,
+    this.imagePath,
   });
 
-  void _showFullImageDialog(BuildContext context, XFile imageFile) {
+  void _showFullImageDialog(BuildContext context, File imageFile) {
     showDialog(
       context: context,
       builder: (context) {
@@ -27,7 +29,7 @@ class BotanicalDossierScreen extends StatelessWidget {
             clipBehavior: Clip.none,
             alignment: Alignment.center,
             children: [
-              InteractiveViewer(child: Image.file(File(imageFile.path))),
+              InteractiveViewer(child: Image.file(imageFile)),
               Positioned(
                 top: -10,
                 right: -10,
@@ -55,6 +57,9 @@ class BotanicalDossierScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageFile = plantImage != null
+        ? File(plantImage!.path)
+        : (imagePath != null ? File(imagePath!) : null);
     return Scaffold(
       appBar: AppBar(
         title: const Text('FLORADEX'),
@@ -89,57 +94,28 @@ class BotanicalDossierScreen extends StatelessWidget {
                   padding: const EdgeInsets.all(AppTheme.space2),
                   child: Stack(
                     children: [
-                      plantImage != null
-                          ? Stack(
-                              children: [
-                                AspectRatio(
-                                  aspectRatio: 1.0,
-                                  child: Image.file(
-                                    File(plantImage!.path),
-                                    fit: BoxFit
-                                        .cover, // Ensures the image fills the square
-                                  ),
+                      if (imageFile != null)
+                        AspectRatio(
+                          aspectRatio: 1.0,
+                          child: Image.file(imageFile, fit: BoxFit.cover),
+                        )
+                      else
+                        // Placeholder for actual image
+                        Column(
+                          children: [
+                            AspectRatio(
+                              aspectRatio: 1.0,
+                              child: Container(
+                                color: AppTheme.surfaceContainerLow,
+                                child: const Icon(
+                                  Icons.eco,
+                                  size: 100,
+                                  color: AppTheme.outlineVariant,
                                 ),
-                                Positioned(
-                                  top: 4,
-                                  right: 4,
-                                  child: Container(
-                                    decoration: const BoxDecoration(
-                                      color: Colors
-                                          .black54, // Semi-transparent background for visibility
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: IconButton(
-                                      icon: const Icon(
-                                        Icons.fullscreen,
-                                        color: Colors.white,
-                                      ),
-                                      onPressed: () => _showFullImageDialog(
-                                        context,
-                                        plantImage!,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          :
-                            // Placeholder for actual image
-                            Column(
-                              children: [
-                                AspectRatio(
-                                  aspectRatio: 1.0,
-                                  child: Container(
-                                    color: AppTheme.surfaceContainerLow,
-                                    child: const Icon(
-                                      Icons.eco,
-                                      size: 100,
-                                      color: AppTheme.outlineVariant,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
+                          ],
+                        ),
                       // ID Tag
                       Positioned(
                         bottom: AppTheme.space2,
@@ -162,6 +138,26 @@ class BotanicalDossierScreen extends StatelessWidget {
                           ),
                         ),
                       ),
+                      if (imageFile != null)
+                        Positioned(
+                          top: AppTheme.space2,
+                          right: AppTheme.space2,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: AppTheme.primary.withOpacity(0.9),
+                              shape: BoxShape.circle,
+                            ),
+                            child: IconButton(
+                              tooltip: 'View full image',
+                              onPressed: () =>
+                                  _showFullImageDialog(context, imageFile),
+                              icon: const Icon(
+                                Icons.fullscreen,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),

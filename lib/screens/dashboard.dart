@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:floradex/models/plant_record.dart';
 import 'package:floradex/models/user_info.dart';
+import 'package:floradex/screens/botanical_dossier.dart';
 import 'package:floradex/services/database_service.dart';
 import 'package:floradex/services/rank_service.dart';
 import 'package:floradex/services/user_service.dart';
@@ -343,23 +344,19 @@ class _DashboardPageState extends State<DashboardPage> {
                 padding: const EdgeInsets.only(right: AppTheme.space2),
                 child: _buildPlantCard(
                   context,
-                  title: items[0].plantName,
-                  subtitle: items[0].scientificName,
-                  imagePath: items[0].imagePath,
+                  plant: items[0],
                 ),
               ),
             ),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(left: AppTheme.space2),
-                child: _buildPlantCard(
-                  context,
-                  title: items.length > 1 ? items[1].plantName : '',
-                  subtitle: items.length > 1 ? items[1].scientificName : '',
-                  imagePath: items.length > 1
-                      ? items[1].imagePath
-                      : items[0].imagePath,
-                ),
+                child: items.length > 1
+                    ? _buildPlantCard(
+                        context,
+                        plant: items[1],
+                      )
+                    : const SizedBox.shrink(),
               ),
             ),
           ],
@@ -370,65 +367,91 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildPlantCard(
     BuildContext context, {
-    required String title,
-    required String subtitle,
-    required String imagePath,
+    required PlantRecord plant,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceContainerLowest,
-        border: Border.all(color: AppTheme.primary, width: 2),
+    return InkWell(
+      onTap: () => _openPlantDossier(context, plant),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppTheme.surfaceContainerLowest,
+          border: Border.all(color: AppTheme.primary, width: 2),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              height: 145,
+              child: Container(
+                color: AppTheme.surfaceContainerHigh,
+                alignment: Alignment.center,
+                child: Image.file(
+                  File(plant.imagePath),
+                  width: double.infinity,
+                  height: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            Container(
+              decoration: const BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: AppTheme.primary, width: 2),
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.space2,
+                vertical: AppTheme.space3,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    plant.plantName,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.displaySmall?.copyWith(fontSize: 9),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: AppTheme.space1),
+                  Text(
+                    plant.scientificName,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: AppTheme.secondary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            height: 145,
-            child: Container(
-              color: AppTheme.surfaceContainerHigh,
-              alignment: Alignment.center,
-              child: Image.file(
-                File(imagePath),
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-          Container(
-            decoration: const BoxDecoration(
-              border: Border(
-                top: BorderSide(color: AppTheme.primary, width: 2),
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.space2,
-              vertical: AppTheme.space3,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.displaySmall?.copyWith(fontSize: 9),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: AppTheme.space1),
-                Text(
-                  subtitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelMedium?.copyWith(color: AppTheme.secondary),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
+    );
+  }
+
+  void _openPlantDossier(BuildContext context, PlantRecord plant) {
+    final details = {
+      'common_name': plant.plantName,
+      'scientific_name': plant.scientificName,
+      'medical_uses': plant.medicalUses,
+      'edibility': plant.edibility,
+      'taste': plant.taste,
+      'harvest_season': plant.harvestSeason,
+      'growth_time': plant.growthTime,
+      'origin': plant.origin,
+      'facts': plant.facts,
+    };
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BotanicalDossierScreen(
+          plantName: plant.plantName,
+          imagePath: plant.imagePath,
+          plantDetails: details,
+        ),
       ),
     );
   }

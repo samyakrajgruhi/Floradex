@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:floradex/models/user_info.dart';
+import 'package:floradex/screens/botanical_dossier.dart';
 import 'package:floradex/services/rank_service.dart';
 import 'package:floradex/services/user_service.dart';
 import 'package:floradex/theme/app_theme.dart';
@@ -21,7 +22,6 @@ class VaultData {
     required this.progress,
   });
 }
-
 
 class BotanicalVaultPage extends StatefulWidget {
   const BotanicalVaultPage({super.key});
@@ -289,15 +289,48 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
                         : GridView.builder(
                             itemCount: PlantRecords.length,
                             itemBuilder: (context, index) {
-                              return _PlantDataChip(
-                                name: PlantRecords[index].plantName,
-                                scientificName: PlantRecords[index]
-                                    .scientificName, // Reddish tag
-                                imagePath: PlantRecords[index].imagePath,
-                                tagLabel: '',
-                                tagColor: null,
-                                timestamp: PlantRecords[index]
-                                    .timestamp, // Replace with real asset/network
+                              return InkWell(
+                                onTap: () {
+                                  final details = {
+                                    'common_name':
+                                        PlantRecords[index].plantName,
+                                    'scientific_name':
+                                        PlantRecords[index].scientificName,
+                                    'medical_uses':
+                                        PlantRecords[index].medicalUses,
+                                    'edibility': PlantRecords[index].edibility,
+                                    'taste': PlantRecords[index].taste,
+                                    'harvest_season':
+                                        PlantRecords[index].harvestSeason,
+                                    'growth_time':
+                                        PlantRecords[index].growthTime,
+                                    'origin': PlantRecords[index].origin,
+                                    'facts': PlantRecords[index].facts,
+                                  };
+
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => BotanicalDossierScreen(
+                                        plantName:
+                                            PlantRecords[index].plantName,
+                                        imagePath:
+                                            PlantRecords[index].imagePath,
+                                        plantDetails: details,
+                                      ),
+                                    ),
+                                  );
+                                },
+                                child: _PlantDataChip(
+                                  name: PlantRecords[index].plantName,
+                                  scientificName: PlantRecords[index]
+                                      .scientificName, // Reddish tag
+                                  imagePath: PlantRecords[index].imagePath,
+                                  tagLabel: '',
+                                  tagColor: null,
+                                  timestamp: PlantRecords[index]
+                                      .timestamp, // Replace with real asset/network
+                                ),
                               );
                             },
                             gridDelegate:
@@ -459,6 +492,3 @@ class _PlantDataChip extends StatelessWidget {
     );
   }
 }
-
-
-
