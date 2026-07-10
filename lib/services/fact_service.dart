@@ -28,11 +28,8 @@ class BotanicalFactService {
       apiKey: apiKey,
       defaultOptions: const ChatGoogleGenerativeAIOptions(
         model: 'gemini-2.5-flash',
-<<<<<<< HEAD
-        temperature: 0.2,
-=======
         temperature: 0.5,
->>>>>>> 10356ec (- Implement Fact Service and Show a new fact everytime the app opens.)
+
       ),
     );
 
