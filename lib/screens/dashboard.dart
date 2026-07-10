@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:floradex/models/plant_record.dart';
 import 'package:floradex/models/user_info.dart';
 import 'package:floradex/screens/botanical_dossier.dart';
+import 'package:floradex/services/fact_service.dart';
 import 'package:floradex/services/database_service.dart';
 import 'package:floradex/services/rank_service.dart';
 import 'package:floradex/services/user_service.dart';
@@ -36,16 +37,20 @@ class _DashboardPageState extends State<DashboardPage> {
   final userService = UserService();
   final rankService = RankService();
   final dataBaseService = DatabaseService();
+  final factService = BotanicalFactService();
 
   late Future<List<PlantRecord>> recentDiscoveries;
 
   late Future<DashboardData> dashboardData;
+
+  late Future<String?> dailyFact;
 
   @override
   void initState() {
     super.initState();
     dashboardData = loadDashboardData();
     recentDiscoveries = dataBaseService.getRecentDiscoveries();
+    dailyFact = fetchDailyFact();
   }
 
   Future<DashboardData> loadDashboardData() async {
@@ -60,6 +65,17 @@ class _DashboardPageState extends State<DashboardPage> {
       nextRank: nextRank,
       progress: progress,
     );
+  }
+
+  Future<String?> fetchDailyFact() async {
+    final fact;
+    try {
+      fact = (await factService.fetchDailyFactJson());
+      return fact;
+    } catch (e) {
+      print("Failed to fetch botanical fact");
+      return null;
+    }
   }
 
   @override
@@ -342,20 +358,14 @@ class _DashboardPageState extends State<DashboardPage> {
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(right: AppTheme.space2),
-                child: _buildPlantCard(
-                  context,
-                  plant: items[0],
-                ),
+                child: _buildPlantCard(context, plant: items[0]),
               ),
             ),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.only(left: AppTheme.space2),
                 child: items.length > 1
-                    ? _buildPlantCard(
-                        context,
-                        plant: items[1],
-                      )
+                    ? _buildPlantCard(context, plant: items[1])
                     : const SizedBox.shrink(),
               ),
             ),
@@ -365,10 +375,7 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildPlantCard(
-    BuildContext context, {
-    required PlantRecord plant,
-  }) {
+  Widget _buildPlantCard(BuildContext context, {required PlantRecord plant}) {
     return InkWell(
       onTap: () => _openPlantDossier(context, plant),
       child: Container(
@@ -487,11 +494,23 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
                 const SizedBox(height: AppTheme.space2),
-                Text(
-                  'Aloe Vera contains over 75 active components including vitamins, minerals, and amino acids!',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                FutureBuilder(
+                  future: dailyFact,
+                  builder: (context, asyncSnapshot) {
+                    if (asyncSnapshot.connectionState != ConnectionState.done) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    final data = asyncSnapshot.data;
+                     if (data == null) {
+                        return const Center(child: Text('No Data!!'));
+                      }
+                    return Text(
+                      data,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
