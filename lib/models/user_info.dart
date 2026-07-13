@@ -17,4 +17,7 @@ class UserInfo extends HiveObject {
 
   @HiveField(4)
   late int userProgress;
+
+  @HiveField(5)
+  late String profileImagePath;
 }

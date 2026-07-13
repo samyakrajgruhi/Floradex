@@ -24,7 +24,8 @@ Future<void> bootstrapUserInfo() async {
       ..userName = 'Unkown User'
       ..userEmail = ''
       ..rankName = 'Wild Seed'
-      ..userProgress = 0;
+      ..userProgress = 0
+      ..profileImagePath = 'assets/default_profile/male1.png';
 
     await userBox.put('current_user', defaultUser);
     currentUser = defaultUser;

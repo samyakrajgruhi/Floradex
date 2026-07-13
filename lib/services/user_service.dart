@@ -20,4 +20,14 @@ class UserService {
     userInfo.userProgress += n;
     await box.put('current_user', userInfo);
   }
+
+  Future<void> updateProfileImage(String path) async {
+    final box = await Hive.openBox<UserInfo>('user_data');
+    final userInfo = box.get('current_user');
+
+    if (userInfo == null) throw StateError('User info not found');
+
+    userInfo.profileImagePath = path;
+    await box.put('current_user', userInfo);
+  }
 }

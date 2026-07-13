@@ -4,6 +4,7 @@ import 'package:floradex/models/user_info.dart';
 import 'package:floradex/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import '../theme/app_theme.dart';
 
 class ResearcherProfileScreen extends StatefulWidget {
@@ -38,11 +39,44 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
   void initState() {
     super.initState();
     _scanCountFuture = _loadScanCount();
+    _loadProfileImage();
   }
 
   Future<int> _loadScanCount() async {
     final user = await _userService.getUserInfo();
     return user.userProgress;
+  }
+
+  Future<void> _loadProfileImage() async {
+    final user = await _userService.getUserInfo();
+    final savedPath = user.profileImagePath;
+
+    if (!mounted) return;
+    setState(() {
+      if (savedPath.startsWith('assets/')) {
+        _selectedAssetPath = savedPath;
+        _selectedGalleryImage = null;
+      } else {
+        _selectedGalleryImage = File(savedPath);
+      }
+    });
+  }
+
+  Future<void> _saveProfileImage() async {
+    final user = await _userService.getUserInfo();
+    final oldPath = user.profileImagePath;
+
+    String newPath;
+    if (_selectedGalleryImage != null) {
+      final directory = await getApplicationDocumentsDirectory();
+      final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final savePath = '${directory.path}/${fileName}';
+      await _selectedGalleryImage!.copy(savePath);
+
+      await _userService.updateProfileImage(savePath);
+    } else {
+      await _userService.updateProfileImage(_selectedAssetPath);
+    }
   }
 
   Future<void> _showProfileImageDialog() async {
@@ -99,11 +133,12 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
                         _selectedGalleryImage == null &&
                         _selectedAssetPath == assetPath;
                     return InkWell(
-                      onTap: () {
+                      onTap: () async {
                         setState(() {
                           _selectedGalleryImage = null;
                           _selectedAssetPath = assetPath;
                         });
+                        await _saveProfileImage();
                         Navigator.of(dialogContext).pop();
                       },
                       child: Container(
@@ -144,6 +179,7 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
     setState(() {
       _selectedGalleryImage = File(file.path);
     });
+    await _saveProfileImage();
   }
 
   ImageProvider<Object> _buildProfileImageProvider() {
@@ -174,10 +210,7 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
                   color: AppTheme.surfaceContainerLowest,
                   border: Border.all(color: AppTheme.onSurface, width: 2),
                   boxShadow: const [
-                    BoxShadow(
-                      color: AppTheme.primary,
-                      offset: Offset(-2, -2),
-                    ),
+                    BoxShadow(color: AppTheme.primary, offset: Offset(-2, -2)),
                     BoxShadow(color: AppTheme.onSurface, offset: Offset(2, 2)),
                   ],
                 ),
@@ -219,7 +252,10 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
                         color: AppTheme.surfaceContainerHighest,
                         offset: Offset(2, 2),
                       ),
-                      BoxShadow(color: AppTheme.onSurface, offset: Offset(4, 4)),
+                      BoxShadow(
+                        color: AppTheme.onSurface,
+                        offset: Offset(4, 4),
+                      ),
                     ],
                   ),
                   padding: const EdgeInsets.all(AppTheme.space3),
@@ -423,10 +459,22 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
                 _buildAchievementBox(icon: Icons.forest, unlocked: true),
                 _buildAchievementBox(icon: Icons.water_drop, unlocked: true),
                 _buildAchievementBox(icon: Icons.wb_sunny, unlocked: true),
-                _buildAchievementBox(icon: Icons.psychology_alt, unlocked: false),
-                _buildAchievementBox(icon: Icons.shield_outlined, unlocked: false),
-                _buildAchievementBox(icon: Icons.workspace_premium_outlined, unlocked: false),
-                _buildAchievementBox(icon: Icons.science_outlined, unlocked: false),
+                _buildAchievementBox(
+                  icon: Icons.psychology_alt,
+                  unlocked: false,
+                ),
+                _buildAchievementBox(
+                  icon: Icons.shield_outlined,
+                  unlocked: false,
+                ),
+                _buildAchievementBox(
+                  icon: Icons.workspace_premium_outlined,
+                  unlocked: false,
+                ),
+                _buildAchievementBox(
+                  icon: Icons.science_outlined,
+                  unlocked: false,
+                ),
               ],
             ),
             const SizedBox(height: AppTheme.space10),
