@@ -21,13 +21,14 @@ class UserInfoAdapter extends TypeAdapter<UserInfo> {
       ..userName = fields[1] as String
       ..userEmail = fields[2] as String
       ..rankName = fields[3] as String
-      ..userProgress = fields[4] as int;
+      ..userProgress = fields[4] as int
+      ..profileImagePath = fields[5] as String;
   }
 
   @override
   void write(BinaryWriter writer, UserInfo obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.userId)
       ..writeByte(1)
@@ -37,7 +38,9 @@ class UserInfoAdapter extends TypeAdapter<UserInfo> {
       ..writeByte(3)
       ..write(obj.rankName)
       ..writeByte(4)
-      ..write(obj.userProgress);
+      ..write(obj.userProgress)
+      ..writeByte(5)
+      ..write(obj.profileImagePath);
   }
 
   @override

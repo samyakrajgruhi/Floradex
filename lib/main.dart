@@ -4,12 +4,15 @@ import 'package:floradex/screens/dashboard.dart';
 import 'package:floradex/screens/debug_vault_screen.dart';
 import 'package:floradex/screens/researcher_profile.dart';
 import 'package:floradex/screens/scanner.dart';
+import 'package:floradex/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:floradex/theme/app_theme.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:floradex/models/plant_record.dart';
 import 'package:uuid/uuid.dart';
+import 'dart:io';
 
 late final UserInfo currentUser;
 
@@ -70,6 +73,10 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  final UserService _userService = UserService();
+
+  String _profileImagePath = 'assets/default_profile/male1.png';
+  File? _profileGalleryImage;
   int _currentIndex = 0;
 
   late final List<Widget> _pages;
@@ -77,6 +84,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
+    _loadProfileImage();
     _pages = [
       DashboardPage(
         onViewAllTap: () {
@@ -90,49 +98,92 @@ class _MainScreenState extends State<MainScreen> {
     ];
   }
 
+  Future<void> _loadProfileImage() async {
+    final user = await _userService.getUserInfo();
+    final savedPath = user.profileImagePath.isEmpty
+        ? 'assets/default_profile/male1.png'
+        : user.profileImagePath;
+
+    if (!mounted) return;
+
+    setState(() {
+      if (savedPath.startsWith('assets/')) {
+        _profileImagePath = savedPath;
+        _profileGalleryImage = null;
+      } else {
+        _profileGalleryImage = File(savedPath);
+      }
+    });
+  }
+
+  ImageProvider<Object> _buildProfileImageProvider() {
+    if (_profileGalleryImage != null) {
+      return FileImage(_profileGalleryImage!);
+    }
+    return AssetImage(_profileImagePath);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('FLORADEX'),
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: AppTheme.space4),
-            alignment: Alignment.center,
-            child: InkWell(
-              onTap: () {
-                if (_currentIndex == 1) {
-                  setState(() {
-                    _currentIndex = 0;
-                  });
-                }
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => ResearcherProfileScreen(user: currentUser),
+          Padding(
+            padding: const EdgeInsets.only(right: AppTheme.space4),
+            child: Center(
+              child: InkWell(
+                onTap: () async {
+                  if (_currentIndex == 1) {
+                    setState(() {
+                      _currentIndex = 0;
+                    });
+                  }
+
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          ResearcherProfileScreen(user: currentUser),
+                    ),
+                  );
+
+                  await _loadProfileImage();
+                },
+                onLongPress: () {
+                  if (_currentIndex == 1) {
+                    setState(() {
+                      _currentIndex = 0;
+                    });
+                  }
+
+                  Navigator.of(
+                    context,
+                  ).push(MaterialPageRoute(builder: (_) => DebugVaultScreen()));
+                },
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceContainerLowest,
+                    border: Border.all(color: AppTheme.onSurface, width: 2),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: AppTheme.primary,
+                        offset: Offset(-2, -2),
+                      ),
+                      BoxShadow(
+                        color: AppTheme.onSurface,
+                        offset: Offset(2, 2),
+                      ),
+                    ],
                   ),
-                );
-              },
-              onLongPress: () {
-                if (_currentIndex == 1) {
-                  setState(() {
-                    _currentIndex = 0;
-                  });
-                }
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => DebugVaultScreen()));
-              },
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: AppTheme.secondaryContainer,
-                  border: Border.all(color: AppTheme.onSurface, width: 2),
-                ),
-                child: const Icon(
-                  Icons.person,
-                  size: 20,
-                  color: AppTheme.onSecondaryContainer,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppTheme.space1),
+                    child: Image(
+                      image: _buildProfileImageProvider(),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
               ),
             ),

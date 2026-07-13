@@ -19,5 +19,5 @@ class UserInfo extends HiveObject {
   late int userProgress;
 
   @HiveField(5)
-  late String profileImagePath;
+  String profileImagePath = 'assets/default_profile/male1.png';
 }
