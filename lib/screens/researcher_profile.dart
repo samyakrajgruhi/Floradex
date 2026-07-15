@@ -30,6 +30,9 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
 
   final ImagePicker _imagePicker = ImagePicker();
   final UserService _userService = UserService();
+
+  final TextEditingController _nameController = TextEditingController();
+
   late Future<int> _scanCountFuture;
 
   String _selectedAssetPath = 'assets/default_profile/male1.png';
@@ -40,6 +43,7 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
     super.initState();
     _scanCountFuture = _loadScanCount();
     _loadProfileImage();
+    _nameController.text = widget.user.userName;
   }
 
   Future<int> _loadScanCount() async {
@@ -180,6 +184,160 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
       _selectedGalleryImage = File(file.path);
     });
     await _saveProfileImage();
+  }
+
+  Future<void> _showEditNameDialog() async {
+    _nameController.text = widget.user.userName;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: AppTheme.surfaceContainerLowest,
+          insetPadding: const EdgeInsets.symmetric(horizontal: AppTheme.space4),
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          child: StatefulBuilder(
+            builder: (context, setDialogState) {
+              final trimmed = _nameController.text.trim();
+              final canSave = trimmed.isNotEmpty;
+              return Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppTheme.onSurface, width: 2),
+                ),
+                padding: const EdgeInsets.all(AppTheme.space4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'EDIT USERNAME',
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        color: AppTheme.secondary,
+                        fontSize: 11,
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.space4),
+                    TextField(
+                      controller: _nameController,
+                      autofocus: true,
+                      textCapitalization: TextCapitalization.words,
+                      cursorColor: AppTheme.primary,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppTheme.onSurface,
+                        fontWeight: FontWeight.w800,
+                      ),
+                      decoration: InputDecoration(
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.space3,
+                          vertical: AppTheme.space3,
+                        ),
+                        hintText: 'ENTER NAME',
+                        hintStyle: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: AppTheme.outline,
+                              fontWeight: FontWeight.w800,
+                            ),
+                        filled: true,
+                        fillColor: AppTheme.surfaceContainerLowest,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.zero,
+                          borderSide: const BorderSide(
+                            color: AppTheme.onSurface,
+                            width: 2,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.zero,
+                          borderSide: const BorderSide(
+                            color: AppTheme.onSurface,
+                            width: 2,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.zero,
+                          borderSide: const BorderSide(
+                            color: AppTheme.primary,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      onChanged: (_) => setDialogState(() {}),
+                    ),
+                    const SizedBox(height: AppTheme.space4),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () => Navigator.of(dialogContext).pop(),
+                            child: Container(
+                              padding: const EdgeInsets.all(AppTheme.space4),
+                              decoration: BoxDecoration(
+                                color: AppTheme.surfaceContainerLow,
+                                border: Border.all(
+                                  color: AppTheme.onSurface,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Text(
+                                'CANCEL',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(
+                                      color: AppTheme.onSurface,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.space3),
+                        Expanded(
+                          child: InkWell(
+                            onTap: canSave
+                                ? () async {
+                                    await _userService.updateUserName(trimmed);
+                                    if (!mounted) return;
+                                    setState(() {
+                                      widget.user.userName = trimmed;
+                                    });
+                                    Navigator.of(dialogContext).pop();
+                                  }
+                                : null,
+                            child: Container(
+                              padding: const EdgeInsets.all(AppTheme.space4),
+                              decoration: BoxDecoration(
+                                color: canSave
+                                    ? AppTheme.primary
+                                    : AppTheme.surfaceContainerLow,
+                                border: Border.all(
+                                  color: AppTheme.onSurface,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Text(
+                                'SAVE',
+                                textAlign: TextAlign.center,
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(
+                                      color: canSave
+                                          ? AppTheme.onPrimary
+                                          : AppTheme.outline,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 
   ImageProvider<Object> _buildProfileImageProvider() {
@@ -325,13 +483,40 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
               ],
             ),
             const SizedBox(height: 44),
-            Text(
-              widget.user.userName.toUpperCase(),
-              style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                color: AppTheme.primary,
-                fontSize: 28,
-                height: 1.3,
-              ),
+            Row(
+              children: [
+                Text(
+                  widget.user.userName.toUpperCase(),
+                  style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                    color: AppTheme.primary,
+                    fontSize: 28,
+                    height: 1.3,
+                  ),
+                ),
+                const SizedBox(width: AppTheme.space2),
+                InkWell(
+                  onTap: _showEditNameDialog,
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary,
+                      border: Border.all(color: AppTheme.onSurface, width: 2),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: AppTheme.onSurface,
+                          offset: Offset(2, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.edit,
+                      size: 18,
+                      color: AppTheme.onPrimary,
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: AppTheme.space3),
             Container(
@@ -486,12 +671,6 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
               ),
             ),
             const SizedBox(height: AppTheme.space4),
-            _buildOperationButton(
-              context,
-              icon: Icons.person_search_outlined,
-              label: 'EDIT PROFILE',
-              onTap: _showProfileImageDialog,
-            ),
             _buildOperationButton(
               context,
               icon: Icons.notifications_none,

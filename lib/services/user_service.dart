@@ -30,4 +30,14 @@ class UserService {
     userInfo.profileImagePath = path;
     await box.put('current_user', userInfo);
   }
+
+  Future<void> updateUserName(String newUserName) async {
+    final box = await Hive.openBox<UserInfo>('user_data');
+    final userInfo = box.get('current_user');
+    if (userInfo == null) throw StateError('User Info not found!');
+
+    userInfo.userName = newUserName;
+
+    await box.put('current_user', userInfo);
+  }
 }
