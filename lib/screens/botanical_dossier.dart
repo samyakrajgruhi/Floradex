@@ -267,7 +267,55 @@ class BotanicalDossierScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(width: AppTheme.space2),
                                 Text(
-                                  'ARID / SUNNY',
+                                  plantDetails?['environment'],
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppTheme.space6),
+
+            // Type Of Plants
+            Container(
+              color: AppTheme.surfaceContainer,
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(width: 8, color: AppTheme.onPrimaryContainer),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppTheme.space3),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'TYPE OF PLANT',
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(
+                                    fontFamily: 'Press Start 2P',
+                                    fontSize: 10,
+                                  ),
+                            ),
+                            const SizedBox(height: AppTheme.space2),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.dataset_outlined,
+                                  color: AppTheme.onSurface,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: AppTheme.space2),
+                                Text(
+                                  plantDetails?['plant_type'] ?? 'Unknown',
                                   style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(fontWeight: FontWeight.w700),
                                 ),

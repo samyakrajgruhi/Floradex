@@ -5,7 +5,7 @@ import 'package:floradex/models/user_info.dart';
 import 'package:floradex/screens/botanical_dossier.dart';
 import 'package:floradex/services/fact_service.dart';
 import 'package:floradex/services/database_service.dart';
-import 'package:floradex/services/rank_service.dart';
+import 'package:floradex/services/userProgress_service.dart';
 import 'package:floradex/services/user_service.dart';
 import 'package:floradex/theme/app_theme.dart';
 import 'package:floradex/widgets/rank_timeline.dart';
@@ -35,7 +35,7 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   final userService = UserService();
-  final rankService = RankService();
+  final userProgressService = UserProgressService();
   final dataBaseService = DatabaseService();
   final factService = BotanicalFactService();
 
@@ -55,9 +55,9 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Future<DashboardData> loadDashboardData() async {
     final user = await userService.getUserInfo();
-    final currentRank = await rankService.getRankForProgress(user.userProgress);
-    final nextRank = await rankService.getNextRank(user.userProgress);
-    final progress = await rankService.progressRatioToNext(user.userProgress);
+    final currentRank = await userProgressService.getRankForProgress(user.userProgress);
+    final nextRank = await userProgressService.getNextRank(user.userProgress);
+    final progress = await userProgressService.progressRatioToNext(user.userProgress);
 
     return DashboardData(
       user: user,

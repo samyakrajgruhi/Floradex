@@ -30,10 +30,10 @@ class Rank {
   );
 }
 
-class RankService {
-  static final RankService _i = RankService._();
-  factory RankService() => _i;
-  RankService._();
+class UserProgressService {
+  static final UserProgressService _i = UserProgressService._();
+  factory UserProgressService() => _i;
+  UserProgressService._();
 
   List<Rank>? _ranks;
 

@@ -14,13 +14,17 @@ class PlantInfoService {
       return null;
     }
 
-    final url = Uri.parse('https://my-api.plantnet.org/v2/identify/all?api-key=$apiKey');
+    final url = Uri.parse(
+      'https://my-api.plantnet.org/v2/identify/all?api-key=$apiKey',
+    );
     print("Sending image to Plantnet via Multipart");
 
-    try{
+    try {
       var request = http.MultipartRequest('POST', url);
 
-      request.files.add(await http.MultipartFile.fromPath('images', photo.path));
+      request.files.add(
+        await http.MultipartFile.fromPath('images', photo.path),
+      );
 
       request.files.add(http.MultipartFile.fromString('organs', 'auto'));
 
@@ -28,7 +32,7 @@ class PlantInfoService {
 
       var response = await http.Response.fromStream(streamedResponse);
 
-      if(response.statusCode != 200 && response.statusCode != 201){
+      if (response.statusCode != 200 && response.statusCode != 201) {
         print("Plantnet API Error : ${response.statusCode}");
         print("Resposne body :${response.body}");
         return null;
@@ -36,15 +40,15 @@ class PlantInfoService {
 
       final Map<String, dynamic> data = jsonDecode(response.body);
 
-      if(data['results'] == null || data['results'].isEmpty){
+      if (data['results'] == null || data['results'].isEmpty) {
         print("No Plant Suggestions found.");
         return null;
       }
-      final bestMatchName = data['results'][0]['species']['scientificNameWithoutAuthor'];
+      final bestMatchName =
+          data['results'][0]['species']['scientificNameWithoutAuthor'];
       print("Plant Name : $bestMatchName.");
 
       return await getPlantDetailsFromGemini(bestMatchName);
-      
     } catch (e) {
       print("Error communicating with Plantnet API: $e");
       return null;
@@ -92,7 +96,8 @@ class PlantInfoService {
         "harvest_season" : "If edible fruit/vegetable, give the season when it is harvested (e.g. 'Summer (June-August)' or 'Year-round'). If not edible, use empty string.",
         "growth_time" : "If edible fruit/vegetable, give approximate time to grow/harvest (e.g. '90-120 days' or '2-3 years for fruit production'). If not edible, use empty string.",
         "origin" : "origin of the plant",
-        "facts" : ["Fact 1, 6-10 words", "Fact 2, 6-10 words", "Fact 3, 6-10 words"]
+        "facts" : ["Fact 1, 6-10 words", "Fact 2, 6-10 words", "Fact 3, 6-10 words"],
+        "plant_type" : "Type of the plant out of these : 'Plant', 'Tree', 'Fungi', 'Succulent' if not one of these then 'Other'"
       }}
       '''),
     ]);

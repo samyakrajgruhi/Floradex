@@ -44,4 +44,7 @@ class PlantRecord extends HiveObject {
 
   @HiveField(13)
   late DateTime timestamp;
+
+  @HiveField(14)
+  late String plantType;
 }

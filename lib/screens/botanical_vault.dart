@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:floradex/models/user_info.dart';
 import 'package:floradex/screens/botanical_dossier.dart';
-import 'package:floradex/services/rank_service.dart';
+import 'package:floradex/services/userProgress_service.dart';
 import 'package:floradex/services/user_service.dart';
 import 'package:floradex/theme/app_theme.dart';
 import 'package:floradex/widgets/rank_timeline.dart';
@@ -33,7 +33,7 @@ class BotanicalVaultPage extends StatefulWidget {
 class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
   final dbService = DatabaseService();
   final userService = UserService();
-  final rankService = RankService();
+  final userProgressService = UserProgressService();
   final TextEditingController _searchController = TextEditingController();
 
   List<PlantRecord> PlantRecords = [];
@@ -55,8 +55,8 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
 
   Future<VaultData> loadVaultData() async {
     final user = await userService.getUserInfo();
-    final currentRank = await rankService.getRankForProgress(user.userProgress);
-    final progress = await rankService.progressRatioToNext(user.userProgress);
+    final currentRank = await userProgressService.getRankForProgress(user.userProgress);
+    final progress = await userProgressService.progressRatioToNext(user.userProgress);
 
     return VaultData(user: user, currentRank: currentRank, progress: progress);
   }

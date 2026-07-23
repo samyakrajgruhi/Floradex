@@ -45,7 +45,8 @@ class DatabaseService {
       ..facts =
           (plantDetails['facts'] as List?)?.map((e) => e.toString()).toList() ??
           []
-      ..timestamp = currentTime;
+      ..timestamp = currentTime
+      ..plantType = plantDetails['type_type'] ?? 'Unkown';
 
     final userService = UserService();
     userService.incrementProgress(1);
