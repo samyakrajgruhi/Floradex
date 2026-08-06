@@ -22,13 +22,20 @@ class UserInfoAdapter extends TypeAdapter<UserInfo> {
       ..userEmail = fields[2] as String
       ..rankName = fields[3] as String
       ..userProgress = fields[4] as int
-      ..profileImagePath = fields[5] as String;
+      ..profileImagePath = fields[5] as String
+      ..unlockedAchievementIds = (fields[6] as List).cast<String>()
+      ..lastScanDate = fields[7] as DateTime?
+      ..currentStreak = fields[8] as int
+      ..longestStreak = fields[9] as int
+      ..earlyScanCount = fields[10] as int
+      ..nightScanCount = fields[11] as int
+      ..distinctScanDays = fields[12] as int;
   }
 
   @override
   void write(BinaryWriter writer, UserInfo obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(13)
       ..writeByte(0)
       ..write(obj.userId)
       ..writeByte(1)
@@ -40,7 +47,21 @@ class UserInfoAdapter extends TypeAdapter<UserInfo> {
       ..writeByte(4)
       ..write(obj.userProgress)
       ..writeByte(5)
-      ..write(obj.profileImagePath);
+      ..write(obj.profileImagePath)
+      ..writeByte(6)
+      ..write(obj.unlockedAchievementIds)
+      ..writeByte(7)
+      ..write(obj.lastScanDate)
+      ..writeByte(8)
+      ..write(obj.currentStreak)
+      ..writeByte(9)
+      ..write(obj.longestStreak)
+      ..writeByte(10)
+      ..write(obj.earlyScanCount)
+      ..writeByte(11)
+      ..write(obj.nightScanCount)
+      ..writeByte(12)
+      ..write(obj.distinctScanDays);
   }
 
   @override
