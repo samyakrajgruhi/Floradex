@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'package:floradex/models/plant_record.dart';
 import 'package:floradex/models/user_info.dart';
 import 'package:flutter/services.dart';
+import 'package:hive/hive.dart';
 
 class Achievement {
   final String id;
@@ -81,9 +83,25 @@ class CounterResolver {
 }
 
 class CollectionCounter {
-  static int byPlantType(String type) => 0;
-  static int rareCount() => 0;
-  static int uniqueSpeciesCount() => 0;
+  static int byPlantType(String type) {
+    if (type.isEmpty) return 0;
+    final box = Hive.box<PlantRecord>('plants_vault');
+    return box.values
+        .where(
+          (p) => p.plantType.trim().toLowerCase() == type.trim().toLowerCase(),
+        )
+        .length;
+  }
+
+  static int rareCount() {
+    final box = Hive.box<PlantRecord>('plants_vault');
+    return box.values.where((p) => p.rarity as int >= 4).length;
+  }
+
+  static int uniqueSpeciesCount() {
+    final box = Hive.box<PlantRecord>('plants_vault');
+    return box.length;
+  }
 }
 
 class AchievementService {

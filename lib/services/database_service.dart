@@ -22,12 +22,12 @@ class DatabaseService {
     final directory = await getApplicationDocumentsDirectory();
     final String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-    final String permenantImagePath = '${directory.path}/$fileName';
-    await File(imageFile.path).copy(permenantImagePath);
+    final String permanentImagePath = '${directory.path}/$fileName';
+    await File(imageFile.path).copy(permanentImagePath);
     DateTime currentTime = DateTime.now();
     final finalPlantRecord = PlantRecord()
       ..id = itemId
-      ..imagePath = permenantImagePath
+      ..imagePath = permanentImagePath
       ..plantName = plantDetails['common_name'] ?? 'Unknown'
       ..scientificName = plantDetails['scientific_name'] ?? 'Unknown'
       ..rarity = plantDetails['rarity']?.toString() ?? '?'
@@ -46,7 +46,7 @@ class DatabaseService {
           (plantDetails['facts'] as List?)?.map((e) => e.toString()).toList() ??
           []
       ..timestamp = currentTime
-      ..plantType = plantDetails['type_type'] ?? 'Unkown';
+      ..plantType = plantDetails['plant_type'] ?? 'Unkown';
 
     final userService = UserService();
     userService.incrementProgress(1);

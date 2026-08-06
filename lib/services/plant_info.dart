@@ -88,7 +88,7 @@ class PlantInfoService {
       {{
         "common_name" : "The most common english name used in India.",
         "scientific_name" : "Plants scientific name",
-        "rarity" : "Rarity of the plant out of 5",
+        "rarity" : "Rarity of the plant out of 5 (do not use fractions)",
         "environment" : "In which environment is it found the most give in format like 'ARID/SUNNY'.",
         "medical_uses" : ["Short point 1, 5-8 words", "Short point 2, 5-8 words", "Short point 3, 5-8 words"],
         "edibility" : "If edible then give info on how its used in general in short, if not edible or poisonous then mention that",
@@ -97,7 +97,7 @@ class PlantInfoService {
         "growth_time" : "If edible fruit/vegetable, give approximate time to grow/harvest (e.g. '90-120 days' or '2-3 years for fruit production'). If not edible, use empty string.",
         "origin" : "origin of the plant",
         "facts" : ["Fact 1, 6-10 words", "Fact 2, 6-10 words", "Fact 3, 6-10 words"],
-        "plant_type" : "Type of the plant out of these : 'Plant', 'Tree', 'Fungi', 'Succulent' if not one of these then 'Other'"
+        "plant_type" : "Type of the plant out of these : 'Plant', 'Tree', 'Flower', 'Fungi', 'Succulent' if not one of these then 'Other'"
       }}
       '''),
     ]);
