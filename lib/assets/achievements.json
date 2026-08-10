@@ -1,0 +1,222 @@
+  [
+      {
+          "id": "first_expedition",
+          "title": "First Expedition",
+          "description": "Took your very first step into the field and logged a new plant.",
+          "category": "exploration",
+          "rarity": "common",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 1,
+          "counter": "userProgress"
+      },
+      {
+          "id": "weekend_explorer",
+          "title": "Weekend Explorer",
+          "description": "Logged five plants — your weekend trail is taking shape.",
+          "category": "exploration",
+          "rarity": "common",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 5,
+          "counter": "userProgress"
+      },
+      {
+          "id": "trailblazer",
+          "title": "Trailblazer",
+          "description": "Fifty plants catalogued — you've blazed a real trail.",
+          "category": "exploration",
+          "rarity": "common",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 50,
+          "counter": "userProgress"
+      },  
+      {
+          "id": "early_bloomer",
+          "title": "Early Bloomer",
+          "description": "Logged twenty-five plants before 8am - the dawn belongs to you.",
+          "category": "exploration",
+          "rarity": "common",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 25,
+          "counter": "earlyScanCount"
+      },  
+      {
+          "id": "night_forager",
+          "title": "Night Forager",
+          "description": "Logged twenty-five plants after 6pm - you hunt in the dark.",
+          "category": "exploration",
+          "rarity": "common",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 25,
+          "counter": "nightScanCount"
+      },  
+      {
+          "id": "flower_keeper",
+          "title": "Flower Keeper",
+          "description": "Curated a collection of twenty-five flowering species.",
+          "category": "collection",
+          "rarity": "uncommon",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 25,
+          "counter": "plantType:flower"
+      },  
+      {
+          "id": "tree_whisperer",
+          "title": "Tree Whisperer",
+          "description": "Catalogued twenty-five tree species - they trust you now.",
+          "category": "collection",
+          "rarity": "uncommon",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 25,
+          "counter": "plantType:tree"
+      },  
+      {
+          "id": "mushroom_hunter",
+          "title": "Mushroom Hunter",
+          "description": "Found ten mushrooms - quietly, under the leaves.",
+          "category": "collection",
+          "rarity": "uncommon",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 10,
+          "counter": "plantType:mushroom"
+      },  
+      {
+          "id": "succulent_collector",
+          "title": "Succulent Collector",
+          "description": "Gathered fifteen succulents - a tidy, hardy collection.",
+          "category": "collection",
+          "rarity": "uncommon",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 15,
+          "counter": "plantType:succulent"
+      },  
+      {
+          "id": "leaf_collector",
+          "title": "Leaf Collector",
+          "description": "Fifty leaf species pressed into your vault.",
+          "category": "collection",
+          "rarity": "uncommon",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 50,
+          "counter": "plantType:leaf"
+      },  
+      {
+          "id": "consistent_explorer",
+          "title": "Consistent Explorer",
+          "description": "Seven days in a row - the streak is real.",
+          "category": "consistency",
+          "rarity": "rare",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 7,
+          "counter": "currentStreak"
+      },
+      {
+          "id": "nature_devotee",
+          "title": "Nature Devotee",
+          "description": "Thirty distinct days of fieldwork - a devoted life.",
+          "category": "consistency",
+          "rarity": "rare",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 30,
+          "counter": "distinctScanDays"
+      },
+      {
+          "id": "evergreen",
+          "title": "Evergreen",
+          "description": "One hundred days at your longest streak - evergreen.",
+          "category": "consistency",
+          "rarity": "rare",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 100,
+          "counter": "longestStreak"
+      },
+      {
+          "id": "daily_botanist",
+          "title": "Daily Botanist",
+          "description": "Sixty distinct days of practice - the lab never sleeps.",
+          "category": "consistency",
+          "rarity": "rare",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 60,
+          "counter": "distinctScanDays"
+      },
+      {
+          "id": "rare_species_hunter",
+          "title": "Rare Species Hunter",
+          "description": "Found twenty rare species - most researchers never see this many.",
+          "category": "challenging",
+          "rarity": "legendary",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 20,
+          "counter": "rareCount"
+      },
+      {
+          "id": "forest_sage",
+          "title": "Forest Sage",
+          "description": "One hundred plants catalogued - a sage of the forest.",
+          "category": "challenging",
+          "rarity": "legendary",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 100,
+          "counter": "userProgress"
+      },
+      {
+          "id": "bloom_master",
+          "title": "Bloom Master",
+          "description": "One hundred flowering species - master of the bloom.",
+          "category": "challenging",
+          "rarity": "legendary",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 100,
+          "counter": "plantType:flower"
+      },
+      {
+          "id": "master_taxonomist",
+          "title": "Master Taxonomist",
+          "description": "One hundred unique species - taxonomy mastered.",
+          "category": "challenging",
+          "rarity": "legendary",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 100,
+          "counter": "uniqueSpeciesCount"
+      },
+      {
+          "id": "guardian_of_nature",
+          "title": "Guardian of Nature",
+          "description": "A full year of fieldwork - you've become nature's guardian.",
+          "category": "challenging",
+          "rarity": "legendary",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 365,
+          "counter": "distinctScanDays"
+      },
+      {
+          "id": "keeper_of_the_floradex",
+          "title": "Keeper of the Floradex",
+          "description": "Eighteen unique species in your vault - its first keeper.",
+          "category": "challenging",
+          "rarity": "legendary",
+          "icon": "assets/icons/achievements/_placeholder.png",
+          "iconLocked": "assets/icons/achievements/_placeholder.png",
+          "target": 18,
+          "counter": "uniqueSpeciesCount"
+      }
+  ]

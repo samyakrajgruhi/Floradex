@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:floradex/models/plant_record.dart';
+import 'package:floradex/services/achievement_event_bus.dart';
 import 'package:floradex/services/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -550,7 +552,16 @@ class BotanicalDossierScreen extends StatelessWidget {
                 onPressed: () async {
                   if (plantDetails == null || plantImage == null) return;
                   final dbService = DatabaseService();
-                  await dbService.savePlantToVault(plantDetails!, plantImage!);
+                  PlantRecord? saved = await dbService.savePlantToVault(
+                    plantDetails!,
+                    plantImage!,
+                  );
+                  if (saved != null) {
+                    AchievementEventBus.instance.publish(
+                      ScanCompleted(DateTime.now()),
+                    );
+                  }
+
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(

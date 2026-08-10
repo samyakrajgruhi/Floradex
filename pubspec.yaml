@@ -77,7 +77,9 @@ flutter:
     - .env
     - assets/default_profile/
     - assets/ranks.json
+    - lib/assets/achievements.json
     - assets/icons/
+    - assets/icons/achievements/_placeholder.png
     - lib/assets/facts.json
   # To add assets to your application, add an assets section, like this:
   # assets:

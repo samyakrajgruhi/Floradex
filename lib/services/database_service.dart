@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:floradex/models/plant_record.dart';
 import 'package:floradex/services/user_service.dart';
 import 'package:hive/hive.dart';
@@ -7,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 class DatabaseService {
-  Future<void> savePlantToVault(
+  Future<PlantRecord?> savePlantToVault(
     Map<String, dynamic> plantDetails,
     XFile imageFile,
   ) async {
@@ -17,7 +16,7 @@ class DatabaseService {
         .toLowerCase()
         .replaceAll(' ', '_');
     if (box.containsKey(itemId)) {
-      return;
+      return null;
     }
     final directory = await getApplicationDocumentsDirectory();
     final String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
@@ -49,9 +48,10 @@ class DatabaseService {
       ..plantType = plantDetails['plant_type'] ?? 'Unkown';
 
     final userService = UserService();
-    userService.incrementProgress(1);
+    await userService.incrementProgress(1);
 
     await box.put(itemId, finalPlantRecord);
+    return finalPlantRecord;
   }
 
   Future<List<PlantRecord>> fetchPlants() async {

@@ -13,6 +13,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:floradex/models/plant_record.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
+import 'package:floradex/services/achievement_event_bus_scope.dart';
 
 late final UserInfo currentUser;
 
@@ -59,7 +60,7 @@ class FloraDexApp extends StatelessWidget {
     return MaterialApp(
       title: 'FloraDex',
       theme: AppTheme.theme,
-      home: const MainScreen(),
+      home: const AchievementEventBusScope(child: MainScreen()),
       debugShowCheckedModeBanner: false,
     );
   }

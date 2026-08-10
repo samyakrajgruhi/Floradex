@@ -28,7 +28,7 @@ class PlantInfoService {
 
       request.files.add(http.MultipartFile.fromString('organs', 'auto'));
 
-      var streamedResponse = await request.send();
+      final streamedResponse = await request.send().timeout(const Duration(seconds: 30));
 
       var response = await http.Response.fromStream(streamedResponse);
 
