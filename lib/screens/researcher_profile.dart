@@ -1,11 +1,14 @@
 import 'dart:io';
 
 import 'package:floradex/models/user_info.dart';
+import 'package:floradex/screens/botanical_vault.dart';
+import 'package:floradex/services/database_service.dart';
 import 'package:floradex/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import '../theme/app_theme.dart';
+import 'package:floradex/services/achievement_service.dart';
 
 class ResearcherProfileScreen extends StatefulWidget {
   final UserInfo user;
@@ -28,12 +31,26 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
     'assets/default_profile/male4.png',
   ];
 
+  static const List<({String label, String plantType})> _discoveredCategories =
+      [
+        (label: 'PLANTS', plantType: 'Plant'),
+        (label: 'TREES', plantType: 'Trees'),
+        (label: 'FLOWERS', plantType: 'Flowers'),
+        (label: 'FUNGI', plantType: 'Fungi'),
+        (label: 'SUCCULENTS', plantType: 'Succulents'),
+        (label: 'OTHER', plantType: 'Other'),
+      ];
+
   final ImagePicker _imagePicker = ImagePicker();
   final UserService _userService = UserService();
 
   final TextEditingController _nameController = TextEditingController();
 
   late Future<int> _scanCountFuture;
+
+  late Future<List<Achievement>> _achievementsFuture;
+
+  late Future<Map<String, int>> _categoryCountsFuture;
 
   String _selectedAssetPath = 'assets/default_profile/male1.png';
   File? _selectedGalleryImage;
@@ -44,6 +61,8 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
     _scanCountFuture = _loadScanCount();
     _loadProfileImage();
     _nameController.text = widget.user.userName;
+    _achievementsFuture = AchievementService().loadAll();
+    _categoryCountsFuture = _loadCategoryCount();
   }
 
   Future<int> _loadScanCount() async {
@@ -68,13 +87,11 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
 
   Future<void> _saveProfileImage() async {
     final user = await _userService.getUserInfo();
-    final oldPath = user.profileImagePath;
 
-    String newPath;
     if (_selectedGalleryImage != null) {
       final directory = await getApplicationDocumentsDirectory();
       final fileName = 'profile_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final savePath = '${directory.path}/${fileName}';
+      final savePath = '${directory.path}/$fileName';
       await _selectedGalleryImage!.copy(savePath);
 
       await _userService.updateProfileImage(savePath);
@@ -340,6 +357,18 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
     );
   }
 
+  Future<Map<String, int>> _loadCategoryCount() async {
+    final db = DatabaseService();
+    final plants = await db.fetchPlants();
+    final counts = <String, int>{};
+    for (final p in plants) {
+      final raw = p.plantType.trim();
+      final normalized = (raw == 'Unknown' || raw.isEmpty) ? 'Other' : raw;
+      counts[normalized] = (counts[normalized] ?? 0) + 1;
+    }
+    return counts;
+  }
+
   ImageProvider<Object> _buildProfileImageProvider() {
     if (_selectedGalleryImage != null) {
       return FileImage(_selectedGalleryImage!);
@@ -549,7 +578,6 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
               ),
             ),
             const SizedBox(height: AppTheme.space4),
-
             Text(
               'Dedicated researcher of rare mountain flora.\nSpecialized in high-altitude medicinal herbs and moss variations.',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -595,72 +623,83 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
               ),
             ),
             const SizedBox(height: AppTheme.space4),
-            GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: AppTheme.space4,
-              mainAxisSpacing: AppTheme.space4,
-              childAspectRatio: 1.7,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _buildStatCard(
-                  context,
-                  value: '42',
-                  label: 'MEDICINAL',
-                  valueColor: AppTheme.primary,
-                ),
-                _buildStatCard(
-                  context,
-                  value: '12',
-                  label: 'POISONOUS',
-                  valueColor: AppTheme.primary,
-                ),
-                _buildStatCard(
-                  context,
-                  value: '28',
-                  label: 'EDIBLE',
-                  valueColor: AppTheme.primary,
-                ),
-                _buildStatCard(
-                  context,
-                  value: '60',
-                  label: 'DECORATIVE',
-                  valueColor: AppTheme.primary,
-                ),
-              ],
+            FutureBuilder<Map<String, int>>(
+              future: _categoryCountsFuture,
+              builder: (context, snapshot) {
+                final counts = snapshot.data ?? const <String, int>{};
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: AppTheme.space4,
+                    mainAxisSpacing: AppTheme.space4,
+                    childAspectRatio: 1.7,
+                  ),
+                  itemCount: _discoveredCategories.length,
+                  itemBuilder: (context, index) {
+                    final cat = _discoveredCategories[index];
+                    final count = counts[cat.plantType] ?? 0;
+                    return InkWell(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => BotanicalVaultPage(
+                              initialFilterType: cat.plantType,
+                            ),
+                          ),
+                        );
+                      },
+                      child: _buildStatCard(
+                        context,
+                        value: '$count',
+                        label: cat.label,
+                        valueColor: AppTheme.primary,
+                      ),
+                    );
+                  },
+                );
+              },
             ),
             const SizedBox(height: AppTheme.space8),
-            _buildAchievementsHeader(context),
-            const SizedBox(height: AppTheme.space4),
-            GridView.count(
-              crossAxisCount: 4,
-              crossAxisSpacing: AppTheme.space4,
-              mainAxisSpacing: AppTheme.space4,
-              childAspectRatio: 0.85,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _buildAchievementBox(icon: Icons.eco, unlocked: true),
-                _buildAchievementBox(icon: Icons.forest, unlocked: true),
-                _buildAchievementBox(icon: Icons.water_drop, unlocked: true),
-                _buildAchievementBox(icon: Icons.wb_sunny, unlocked: true),
-                _buildAchievementBox(
-                  icon: Icons.psychology_alt,
-                  unlocked: false,
-                ),
-                _buildAchievementBox(
-                  icon: Icons.shield_outlined,
-                  unlocked: false,
-                ),
-                _buildAchievementBox(
-                  icon: Icons.workspace_premium_outlined,
-                  unlocked: false,
-                ),
-                _buildAchievementBox(
-                  icon: Icons.science_outlined,
-                  unlocked: false,
-                ),
-              ],
+            FutureBuilder<List<Achievement>>(
+              future: _achievementsFuture,
+              builder: (context, snapshot) {
+                final achievements = snapshot.data ?? const <Achievement>[];
+                final unlockedIds = widget.user.unlockedAchievementIds.toSet();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildAchievementsHeader(
+                      context,
+                      unlockedCount: unlockedIds.length,
+                      totalCount: achievements.length,
+                    ),
+                    const SizedBox(height: AppTheme.space4),
+                    GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4,
+                            crossAxisSpacing: AppTheme.space4,
+                            mainAxisSpacing: AppTheme.space4,
+                            childAspectRatio: 0.85,
+                          ),
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: achievements.length,
+                      itemBuilder: (context, index) {
+                        final a = achievements[index];
+                        final isUnlocked = unlockedIds.contains(a.id);
+                        return _buildAchievementBox(
+                          achievement: a,
+                          unlocked: isUnlocked,
+                        );
+                      },
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: AppTheme.space10),
             Text(
@@ -720,7 +759,11 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
     );
   }
 
-  Widget _buildAchievementsHeader(BuildContext context) {
+  Widget _buildAchievementsHeader(
+    BuildContext context, {
+    required int unlockedCount,
+    required int totalCount,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFFFFC90A),
@@ -741,7 +784,7 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
             ),
           ),
           Text(
-            '8 / 24 UNLOCKED',
+            '$unlockedCount / $totalCount UNLOCKED',
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: const Color(0xFF6C4E00),
               fontWeight: FontWeight.w800,
@@ -800,44 +843,147 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
   }
 
   Widget _buildAchievementBox({
-    required IconData icon,
+    required Achievement achievement,
     required bool unlocked,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: unlocked
-            ? AppTheme.surfaceContainerLowest
-            : AppTheme.surfaceContainerLowest.withOpacity(0.35),
-        border: Border.all(
-          color: unlocked ? AppTheme.primary : AppTheme.outlineVariant,
-          width: 2,
-        ),
-      ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Center(
-            child: Icon(
-              icon,
-              color: unlocked ? AppTheme.primary : AppTheme.outlineVariant,
-              size: 34,
-            ),
+    final progress = unlocked
+        ? null
+        : '${achievement.currentValueFor(widget.user)}/${achievement.target}';
+
+    return InkWell(
+      onTap: () => _showAchievementDetails(achievement, unlocked),
+      child: Container(
+        decoration: BoxDecoration(
+          color: unlocked
+              ? AppTheme.surfaceContainerLowest
+              : AppTheme.surfaceContainerLowest.withValues(alpha: 0.35),
+          border: Border.all(
+            color: unlocked ? AppTheme.primary : AppTheme.outlineVariant,
+            width: 2,
           ),
-          if (unlocked)
-            Positioned(
-              top: -3,
-              right: -3,
-              child: Container(
-                width: 14,
-                height: 14,
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryContainer,
-                  border: Border.all(color: AppTheme.primary, width: 1.5),
+        ),
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Center(
+              child: unlocked
+                  ? Image.asset(
+                      achievement.iconPath,
+                      width: 34,
+                      height: 34,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.emoji_events_outlined,
+                        color: AppTheme.primary,
+                        size: 34,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.lock_outline,
+                      color: AppTheme.outlineVariant,
+                      size: 34,
+                    ),
+            ),
+            if (unlocked)
+              const Positioned(top: -3, right: -3, child: _UnlockedDot()),
+            if (progress != null)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 4,
+                child: Text(
+                  progress,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppTheme.outline,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 9,
+                  ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
+    );
+  }
+
+  Future<void> _showAchievementDetails(Achievement a, bool unlocked) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: AppTheme.surfaceContainerLowest,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: AppTheme.onSurface, width: 2),
+            ),
+            padding: const EdgeInsets.all(AppTheme.space4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  unlocked ? 'UNLOCKED' : 'LOCKED',
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    color: AppTheme.secondary,
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.space2),
+                Text(
+                  a.title,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: AppTheme.onSurface,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (a.description.isNotEmpty) ...[
+                  const SizedBox(height: AppTheme.space2),
+                  Text(
+                    a.description,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: AppTheme.outline),
+                  ),
+                ],
+                const SizedBox(height: AppTheme.space3),
+                Text(
+                  'Progress: ${a.currentValueFor(widget.user)} / ${a.target}',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.space4),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    onTap: () => Navigator.of(dialogContext).pop(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.space4,
+                        vertical: AppTheme.space2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary,
+                        border: Border.all(color: AppTheme.onSurface, width: 2),
+                      ),
+                      child: Text(
+                        'CLOSE',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: AppTheme.onPrimary,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -899,4 +1045,17 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
       ),
     );
   }
+}
+
+class _UnlockedDot extends StatelessWidget {
+  const _UnlockedDot();
+  @override
+  Widget build(BuildContext context) => Container(
+    width: 14,
+    height: 14,
+    decoration: BoxDecoration(
+      color: AppTheme.primaryContainer,
+      border: Border.all(color: AppTheme.primary, width: 1.5),
+    ),
+  );
 }

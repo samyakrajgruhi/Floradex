@@ -30,7 +30,7 @@ class DatabaseService {
       ..plantName = plantDetails['common_name'] ?? 'Unknown'
       ..scientificName = plantDetails['scientific_name'] ?? 'Unknown'
       ..rarity = plantDetails['rarity']?.toString() ?? '?'
-      ..environment = plantDetails['environment'] ?? 'Unkown'
+      ..environment = plantDetails['environment'] ?? 'Unknown'
       ..medicalUses =
           (plantDetails['medical_uses'] as List?)
               ?.map((e) => e.toString())
@@ -38,14 +38,14 @@ class DatabaseService {
           []
       ..edibility = plantDetails['edibility'] ?? 'Unknown'
       ..taste = plantDetails['taste'] ?? 'Unknown'
-      ..harvestSeason = plantDetails['harvest_season'] ?? 'Unkown'
-      ..growthTime = plantDetails['growth_time'] ?? 'Unkown'
-      ..origin = plantDetails['origin'] ?? 'Unkown'
+      ..harvestSeason = plantDetails['harvest_season'] ?? 'Unknown'
+      ..growthTime = plantDetails['growth_time'] ?? 'Unknown'
+      ..origin = plantDetails['origin'] ?? 'Unknown'
       ..facts =
           (plantDetails['facts'] as List?)?.map((e) => e.toString()).toList() ??
           []
       ..timestamp = currentTime
-      ..plantType = plantDetails['plant_type'] ?? 'Unkown';
+      ..plantType = plantDetails['plant_type'] ?? 'Unknown';
 
     final userService = UserService();
     await userService.incrementProgress(1);

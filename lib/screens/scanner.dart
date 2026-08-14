@@ -117,7 +117,7 @@ class _ScannerPageState extends State<ScannerPage> with WidgetsBindingObserver {
           context,
           MaterialPageRoute(
             builder: (context) => BotanicalDossierScreen(
-              plantName: plantDetails['common_name'] ?? 'Unkown Plant',
+              plantName: plantDetails['common_name'] ?? 'Unknown Plant',
               plantImage: photo,
               plantDetails: plantDetails,
             ),

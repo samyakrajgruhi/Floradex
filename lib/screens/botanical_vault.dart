@@ -24,7 +24,8 @@ class VaultData {
 }
 
 class BotanicalVaultPage extends StatefulWidget {
-  const BotanicalVaultPage({super.key});
+  final String? initialFilterType;
+  const BotanicalVaultPage({super.key, this.initialFilterType});
 
   @override
   State<BotanicalVaultPage> createState() => _BotanicalVaultPageState();
@@ -39,10 +40,12 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
   List<PlantRecord> PlantRecords = [];
   late Future<VaultData> vaultData;
   String _searchQuery = '';
+  String? _activeTypeFilter;
 
   @override
   void initState() {
     super.initState();
+    _activeTypeFilter = widget.initialFilterType;
     _loadPlants();
     vaultData = loadVaultData();
   }
@@ -55,18 +58,24 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
 
   Future<VaultData> loadVaultData() async {
     final user = await userService.getUserInfo();
-    final currentRank = await userProgressService.getRankForProgress(user.userProgress);
-    final progress = await userProgressService.progressRatioToNext(user.userProgress);
+    final currentRank = await userProgressService.getRankForProgress(
+      user.userProgress,
+    );
+    final progress = await userProgressService.progressRatioToNext(
+      user.userProgress,
+    );
 
     return VaultData(user: user, currentRank: currentRank, progress: progress);
   }
 
   Future<void> _loadPlants() async {
     final plants = await dbService.fetchPlants();
+
     if (mounted) {
       setState(() {
-        PlantRecords = plants;
+        PlantRecords = (_activeTypeFilter == null) ? plants : plants.where((p) => p.plantType.trim().toLowerCase() == _activeTypeFilter!.trim().toLowerCase()).toList();
       });
+      
     }
   }
 
@@ -76,23 +85,21 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
       return PlantRecords;
     }
 
-    final matches = PlantRecords.map((plant) {
-      final score = _fuzzyMatchScore(
-        query,
-        _normalizeSearchTerm(plant.plantName),
-      );
-      return _PlantSearchMatch(plant: plant, score: score);
-    }).where((match) => match.score > 0).toList()
-      ..sort((a, b) => b.score.compareTo(a.score));
+    final matches =
+        PlantRecords.map((plant) {
+            final score = _fuzzyMatchScore(
+              query,
+              _normalizeSearchTerm(plant.plantName),
+            );
+            return _PlantSearchMatch(plant: plant, score: score);
+          }).where((match) => match.score > 0).toList()
+          ..sort((a, b) => b.score.compareTo(a.score));
 
     return matches.map((match) => match.plant).toList();
   }
 
   String _normalizeSearchTerm(String value) {
-    return value
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9]+'), '')
-        .trim();
+    return value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '').trim();
   }
 
   double _fuzzyMatchScore(String query, String target) {
@@ -158,8 +165,9 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
       current[0] = sourceIndex + 1;
 
       for (var targetIndex = 0; targetIndex < target.length; targetIndex++) {
-        final substitutionCost =
-            source[sourceIndex] == target[targetIndex] ? 0 : 1;
+        final substitutionCost = source[sourceIndex] == target[targetIndex]
+            ? 0
+            : 1;
         current[targetIndex + 1] = [
           current[targetIndex] + 1,
           previous[targetIndex + 1] + 1,
@@ -292,6 +300,19 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
                   ),
                   const SizedBox(height: 24),
 
+                  // ACTIVE TYPE FILTER
+                  if (_activeTypeFilter != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppTheme.space4),
+                      child: _ActiveFilterBar(
+                        label: _activeTypeFilter!,
+                        onClear: () {
+                          setState(() => _activeTypeFilter = null);
+                          _loadPlants();
+                        },
+                      ),
+                    ),
+
                   // STATS ROW SECTION
                   IntrinsicHeight(
                     child: Row(
@@ -416,9 +437,7 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
                   const SizedBox(height: 32),
 
                   // GRID SECTION
-                  Expanded(
-                    child: _buildPlantGrid(filteredPlantRecords),
-                  ),
+                  Expanded(child: _buildPlantGrid(filteredPlantRecords)),
                 ],
               ),
             ),
@@ -491,6 +510,55 @@ class _PlantSearchMatch {
   final double score;
 
   const _PlantSearchMatch({required this.plant, required this.score});
+}
+
+/// Active filter chip shown when arriving from a category tile on the profile.
+class _ActiveFilterBar extends StatelessWidget {
+  final String label;
+  final VoidCallback onClear;
+  const _ActiveFilterBar({required this.label, required this.onClear});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.space3,
+            vertical: AppTheme.space2,
+          ),
+          decoration: BoxDecoration(
+            color: colorScheme.primary,
+            border: Border.all(color: colorScheme.onSurface, width: 2),
+          ),
+          child: Text(
+            'FILTER: ${label.toUpperCase()}',
+            style: textTheme.labelSmall?.copyWith(
+              fontFamily: 'Press Start 2P',
+              color: colorScheme.onPrimary,
+              fontWeight: FontWeight.w800,
+              fontSize: 10,
+            ),
+          ),
+        ),
+        const SizedBox(width: AppTheme.space3),
+        InkWell(
+          onTap: onClear,
+          child: Container(
+            padding: const EdgeInsets.all(AppTheme.space1),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerLowest,
+              border: Border.all(color: colorScheme.onSurface, width: 2),
+            ),
+            child: Icon(Icons.close, size: 16, color: colorScheme.onSurface),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 /// Helper widget to create the sharp right/bottom 8-bit shadow effect

@@ -21,8 +21,6 @@ class AchievementEventBusScope extends StatefulWidget {
 }
 
 bool _evaluating = false;
-final _pending = <Achievement>[];
-bool _showing = false;
 
 class _AchievementEventBusScopeState extends State<AchievementEventBusScope> {
   final _bus = AchievementEventBus.instance;

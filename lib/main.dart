@@ -25,7 +25,7 @@ Future<void> bootstrapUserInfo() async {
   if (storedUser == null) {
     final defaultUser = UserInfo()
       ..userId = uuid.v8()
-      ..userName = 'Unkown User'
+      ..userName = 'Unknown User'
       ..userEmail = ''
       ..rankName = 'Wild Seed'
       ..userProgress = 0
