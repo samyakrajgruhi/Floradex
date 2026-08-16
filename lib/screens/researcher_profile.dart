@@ -34,10 +34,10 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
   static const List<({String label, String plantType})> _discoveredCategories =
       [
         (label: 'PLANTS', plantType: 'Plant'),
-        (label: 'TREES', plantType: 'Trees'),
-        (label: 'FLOWERS', plantType: 'Flowers'),
+        (label: 'TREES', plantType: 'Tree'),
+        (label: 'FLOWERS', plantType: 'Flower'),
         (label: 'FUNGI', plantType: 'Fungi'),
-        (label: 'SUCCULENTS', plantType: 'Succulents'),
+        (label: 'SUCCULENTS', plantType: 'Succulent'),
         (label: 'OTHER', plantType: 'Other'),
       ];
 
@@ -52,6 +52,8 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
 
   late Future<Map<String, int>> _categoryCountsFuture;
 
+  late Future<int> rarityCount;
+
   String _selectedAssetPath = 'assets/default_profile/male1.png';
   File? _selectedGalleryImage;
 
@@ -63,6 +65,7 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
     _nameController.text = widget.user.userName;
     _achievementsFuture = AchievementService().loadAll();
     _categoryCountsFuture = _loadCategoryCount();
+    rarityCount = _countRarePlants();
   }
 
   Future<int> _loadScanCount() async {
@@ -369,6 +372,19 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
     return counts;
   }
 
+  Future<int> _countRarePlants() async {
+    final db = DatabaseService();
+    final plants = await db.fetchPlants();
+    int rarityCount = 0;
+
+    for (final p in plants) {
+      final rarity = int.tryParse(p.rarity) ?? 0;
+      if (rarity >= 4) rarityCount++;
+    }
+
+    return rarityCount;
+  }
+
   ImageProvider<Object> _buildProfileImageProvider() {
     if (_selectedGalleryImage != null) {
       return FileImage(_selectedGalleryImage!);
@@ -591,26 +607,32 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
               future: _scanCountFuture,
               builder: (context, snapshot) {
                 final scanCount = snapshot.data ?? widget.user.userProgress;
-                return Row(
-                  children: [
-                    Expanded(
-                      child: _buildStatCard(
-                        context,
-                        value: '$scanCount',
-                        label: 'TOTAL SCANS',
-                        valueColor: AppTheme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.space4),
-                    Expanded(
-                      child: _buildStatCard(
-                        context,
-                        value: '12',
-                        label: 'RARE FINDS',
-                        valueColor: AppTheme.secondary,
-                      ),
-                    ),
-                  ],
+                return FutureBuilder(
+                  future: rarityCount,
+                  builder: (context, rareSnapshot) {
+                    final rareCount = rareSnapshot.data ?? 0;
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: _buildStatCard(
+                            context,
+                            value: '$scanCount',
+                            label: 'TOTAL SCANS',
+                            valueColor: AppTheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: AppTheme.space4),
+                        Expanded(
+                          child: _buildStatCard(
+                            context,
+                            value: '$rareCount',
+                            label: 'RARE FINDS',
+                            valueColor: AppTheme.secondary,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 );
               },
             ),
