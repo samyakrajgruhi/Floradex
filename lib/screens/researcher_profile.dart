@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:floradex/models/user_info.dart';
 import 'package:floradex/screens/botanical_vault.dart';
 import 'package:floradex/services/database_service.dart';
+import 'package:floradex/services/userProgress_service.dart';
 import 'package:floradex/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -54,6 +55,8 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
 
   late Future<int> rarityCount;
 
+  late Future<Rank?> _userRank;
+
   String _selectedAssetPath = 'assets/default_profile/male1.png';
   File? _selectedGalleryImage;
 
@@ -66,6 +69,9 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
     _achievementsFuture = AchievementService().loadAll();
     _categoryCountsFuture = _loadCategoryCount();
     rarityCount = _countRarePlants();
+    _userRank = UserProgressService().getRankForProgress(
+      widget.user.userProgress,
+    );
   }
 
   Future<int> _loadScanCount() async {
@@ -397,10 +403,6 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
     return Scaffold(
       backgroundColor: AppTheme.surface,
       appBar: AppBar(
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).maybePop(),
-          icon: const Icon(Icons.menu),
-        ),
         title: const Text('FLORADEX'),
         actions: [
           Padding(
@@ -498,33 +500,6 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
                     ),
                   ),
                 ),
-                Positioned(
-                  left: 68,
-                  bottom: -16,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.space4,
-                      vertical: AppTheme.space2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppTheme.tertiary,
-                      border: Border.all(color: AppTheme.onSurface, width: 2),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: AppTheme.onSurface,
-                          offset: Offset(3, 3),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      'LVL 15',
-                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        color: AppTheme.onTertiary,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 44),
@@ -582,24 +557,23 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
                     color: AppTheme.secondary,
                   ),
                   const SizedBox(width: AppTheme.space1),
-                  Text(
-                    widget.user.rankName.toUpperCase(),
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: AppTheme.secondary,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.0,
-                    ),
+                  FutureBuilder<Rank?>(
+                    future: _userRank,
+                    builder: (context, rankSnapshot) {
+                      final rank = rankSnapshot.data;
+                      return Text(
+                        rank?.title.toUpperCase() ??
+                            'UNABLE TO LOAD RANK TITLE',
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: AppTheme.secondary,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1.0,
+                            ),
+                      );
+                    },
                   ),
                 ],
-              ),
-            ),
-            const SizedBox(height: AppTheme.space4),
-            Text(
-              'Dedicated researcher of rare mountain flora.\nSpecialized in high-altitude medicinal herbs and moss variations.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.outline,
-                fontSize: 18,
-                height: 1.9,
               ),
             ),
             const SizedBox(height: AppTheme.space6),
@@ -755,29 +729,6 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 2,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'HOME',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.camera_alt_outlined),
-            activeIcon: Icon(Icons.camera_alt),
-            label: 'SCAN',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.inventory_2_outlined),
-            activeIcon: Icon(Icons.inventory_2),
-            label: 'VAULT',
-          ),
-        ],
-        onTap: (index) {
-          Navigator.of(context).maybePop();
-        },
-      ),
     );
   }
 
@@ -836,8 +787,8 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
         ],
       ),
       padding: const EdgeInsets.symmetric(
-        vertical: AppTheme.space6,
-        horizontal: AppTheme.space3,
+        vertical: AppTheme.space4,
+        horizontal: AppTheme.space2,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -846,17 +797,18 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
             value,
             style: Theme.of(context).textTheme.displayLarge?.copyWith(
               color: valueColor,
-              fontSize: 24,
+              fontSize: 26,
               height: 1,
             ),
           ),
-          const SizedBox(height: AppTheme.space3),
+          const SizedBox(height: AppTheme.space2),
           Text(
             label,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: AppTheme.outline,
               fontWeight: FontWeight.w800,
+              fontSize: 17,
             ),
           ),
         ],
