@@ -2,6 +2,7 @@ import 'package:floradex/models/user_info.dart';
 import 'package:floradex/screens/botanical_vault.dart';
 import 'package:floradex/screens/dashboard.dart';
 import 'package:floradex/screens/debug_vault_screen.dart';
+import 'package:floradex/screens/onboarding_screen.dart';
 import 'package:floradex/screens/researcher_profile.dart';
 import 'package:floradex/screens/scanner.dart';
 import 'package:floradex/services/user_service.dart';
@@ -38,6 +39,8 @@ Future<void> bootstrapUserInfo() async {
   }
 }
 
+bool get _needsOnboarding => currentUser.userName == 'Unknown User';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
@@ -60,7 +63,9 @@ class FloraDexApp extends StatelessWidget {
     return MaterialApp(
       title: 'FloraDex',
       theme: AppTheme.theme,
-      home: const AchievementEventBusScope(child: MainScreen()),
+      home: AchievementEventBusScope(
+        child: _needsOnboarding ? const OnboardingScreen() : const MainScreen(),
+      ),
       debugShowCheckedModeBanner: false,
     );
   }
