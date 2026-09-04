@@ -49,3 +49,12 @@ prompts/
 ui_images/
 .env
 resource/
+lib/firebase_options.dart
+firebase.json
+google-services.json
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+android/key.properties
+*.jks
+*.keystore
+.env.*

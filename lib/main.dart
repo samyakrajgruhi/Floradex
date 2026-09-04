@@ -1,20 +1,20 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:floradex/firebase_options.dart';
+import 'package:floradex/screens/auth_gate.dart';
 import 'package:floradex/models/user_info.dart';
 import 'package:floradex/screens/botanical_vault.dart';
 import 'package:floradex/screens/dashboard.dart';
 import 'package:floradex/screens/debug_vault_screen.dart';
-import 'package:floradex/screens/onboarding_screen.dart';
 import 'package:floradex/screens/researcher_profile.dart';
 import 'package:floradex/screens/scanner.dart';
 import 'package:floradex/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:floradex/theme/app_theme.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:floradex/models/plant_record.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:io';
-import 'package:floradex/services/achievement_event_bus_scope.dart';
 
 late final UserInfo currentUser;
 
@@ -39,7 +39,7 @@ Future<void> bootstrapUserInfo() async {
   }
 }
 
-bool get _needsOnboarding => currentUser.userName == 'Unknown User';
+bool get needsOnboarding => currentUser.userName == 'Unknown User';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,6 +52,7 @@ void main() async {
   await bootstrapUserInfo();
 
   await dotenv.load(fileName: ".env");
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const FloraDexApp());
 }
 
@@ -63,9 +64,10 @@ class FloraDexApp extends StatelessWidget {
     return MaterialApp(
       title: 'FloraDex',
       theme: AppTheme.theme,
-      home: AchievementEventBusScope(
-        child: _needsOnboarding ? const OnboardingScreen() : const MainScreen(),
-      ),
+      home: AuthGate(),
+      // home: AchievementEventBusScope(
+      //   child: _needsOnboarding ? const OnboardingScreen() : const MainScreen(),
+      // ),
       debugShowCheckedModeBanner: false,
     );
   }
