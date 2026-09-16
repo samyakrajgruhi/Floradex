@@ -472,6 +472,9 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
               'growth_time': plant.growthTime,
               'origin': plant.origin,
               'facts': plant.facts,
+              'environment': plant.environment,
+              'rarity': plant.rarity,
+              'plant_type' : plant.plantType
             };
 
             Navigator.push(
@@ -481,6 +484,7 @@ class _BotanicalVaultPageState extends State<BotanicalVaultPage> {
                   plantName: plant.plantName,
                   imagePath: plant.imagePath,
                   plantDetails: details,
+                  isFromVault: true,
                 ),
               ),
             );

@@ -458,6 +458,7 @@ class _DashboardPageState extends State<DashboardPage> {
           plantName: plant.plantName,
           imagePath: plant.imagePath,
           plantDetails: details,
+          isFromVault: true,
         ),
       ),
     );

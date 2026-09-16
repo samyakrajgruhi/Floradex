@@ -11,6 +11,7 @@ class BotanicalDossierScreen extends StatelessWidget {
   final Map<String, dynamic>? plantDetails;
   final XFile? plantImage;
   final String? imagePath;
+  final bool isFromVault;
 
   const BotanicalDossierScreen({
     super.key,
@@ -18,6 +19,7 @@ class BotanicalDossierScreen extends StatelessWidget {
     this.plantDetails,
     this.plantImage,
     this.imagePath,
+    this.isFromVault = false
   });
 
   void _showFullImageDialog(BuildContext context, File imageFile) {
@@ -269,7 +271,7 @@ class BotanicalDossierScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(width: AppTheme.space2),
                                 Text(
-                                  plantDetails?['environment'],
+                                  plantDetails?['environment'] as String,
                                   style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(fontWeight: FontWeight.w700),
                                 ),
@@ -546,36 +548,37 @@ class BotanicalDossierScreen extends StatelessWidget {
             const SizedBox(height: AppTheme.space8),
 
             // BUTTONS
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  if (plantDetails == null || plantImage == null) return;
-                  final dbService = DatabaseService();
-                  PlantRecord? saved = await dbService.savePlantToVault(
-                    plantDetails!,
-                    plantImage!,
-                  );
-                  if (saved != null) {
-                    AchievementEventBus.instance.publish(
-                      ScanCompleted(DateTime.now()),
+            if(!isFromVault)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    if (plantDetails == null || plantImage == null) return;
+                    final dbService = DatabaseService();
+                    PlantRecord? saved = await dbService.savePlantToVault(
+                      plantDetails!,
+                      plantImage!,
                     );
-                  }
+                    if (saved != null) {
+                      AchievementEventBus.instance.publish(
+                        ScanCompleted(DateTime.now()),
+                      );
+                    }
 
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Plant successfully saved.'),
-                      ),
-                    );
-                    Navigator.popUntil(context, (route) => route.isFirst);
-                  }
-                },
-                icon: const Icon(Icons.save_alt, size: 16),
-                label: const Text('SAVE TO VAULT'),
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Plant successfully saved.'),
+                        ),
+                      );
+                      Navigator.popUntil(context, (route) => route.isFirst);
+                    }
+                  },
+                  icon: const Icon(Icons.save_alt, size: 16),
+                  label: const Text('SAVE TO VAULT'),
+                ),
               ),
-            ),
-            const SizedBox(height: AppTheme.space3),
+            if(!isFromVault) const SizedBox(height: AppTheme.space3),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(

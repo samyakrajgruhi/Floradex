@@ -1,3 +1,5 @@
+import 'package:floradex/exceptions/auth_exception.dart';
+import 'package:floradex/services/auth_service.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
@@ -10,8 +12,105 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
+  final AuthService _authService = AuthService();
+
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
   bool _isRegistering = false;
   bool _obscurePassword = true;
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: AppTheme.error),
+    );
+  }
+
+  Future<void> _handleEmailAuth() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showError('Please fill all the required fields.');
+      return;
+    }
+
+    if (_isRegistering) {
+      final confirmPassword = _confirmPasswordController.text.trim();
+      if (password != confirmPassword) {
+        _showError('Passwords do not match');
+        return;
+      }
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      if (_isRegistering) {
+        await _authService.registerWithEmailPassword(
+          email: email,
+          password: password,
+        );
+      } else {
+        await _authService.signInWithEmailPassword(
+          email: email,
+          password: password,
+        );
+      }
+    } on AuthException catch (e) {
+      _showError(e.message);
+    } catch (e) {
+      _showError('Authentication failed. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    try {
+      await _authService.signInWithGoogle();
+    } on AuthException catch (e) {
+      if (e.code != 'cancelled') {
+        _showError(e.message);
+      }
+    } catch (e) {
+      _showError(e.toString());
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _handleForgotPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      _showError('Enter your email to receive a password reset link.');
+      return;
+    }
+    try {
+      await _authService.sendPasswordResetEmail(email);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Password reset email sent. Please check your inbox.'),
+          backgroundColor: AppTheme.primary,
+        ),
+      );
+    } on AuthException catch (e) {
+      _showError(e.message);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,12 +202,11 @@ class _AuthScreenState extends State<AuthScreen> {
         children: [
           Text(
             'EMAIL ACCESS',
-            style: textTheme.displaySmall?.copyWith(
-              color: AppTheme.secondary,
-            ),
+            style: textTheme.displaySmall?.copyWith(color: AppTheme.secondary),
           ),
           const SizedBox(height: AppTheme.space4),
           TextField(
+            controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
             cursorColor: AppTheme.primary,
@@ -120,6 +218,7 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
           const SizedBox(height: AppTheme.space4),
           TextField(
+            controller: _passwordController,
             obscureText: _obscurePassword,
             textInputAction: TextInputAction.done,
             cursorColor: AppTheme.primary,
@@ -143,6 +242,7 @@ class _AuthScreenState extends State<AuthScreen> {
           if (_isRegistering) ...[
             const SizedBox(height: AppTheme.space4),
             TextField(
+              controller: _confirmPasswordController,
               obscureText: true,
               textInputAction: TextInputAction.done,
               cursorColor: AppTheme.primary,
@@ -158,7 +258,7 @@ class _AuthScreenState extends State<AuthScreen> {
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: () {},
+                onPressed: _isLoading ? null : _handleForgotPassword,
                 child: const Text('FORGOT PASSWORD?'),
               ),
             ),
@@ -167,8 +267,14 @@ class _AuthScreenState extends State<AuthScreen> {
           SizedBox(
             height: 56,
             child: ElevatedButton(
-              onPressed: () {},
-              child: Text(_isRegistering ? 'CREATE ACCOUNT' : 'SIGN IN'),
+              onPressed: _isLoading ? null : _handleEmailAuth,
+              child: _isLoading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(_isRegistering ? 'CREATE ACCOUNT' : 'SIGN IN'),
             ),
           ),
           const SizedBox(height: AppTheme.space6),
@@ -199,7 +305,7 @@ class _AuthScreenState extends State<AuthScreen> {
           SizedBox(
             height: 56,
             child: OutlinedButton.icon(
-              onPressed: () {},
+              onPressed: _isLoading ? null : _handleGoogleSignIn,
               icon: const Icon(Icons.account_circle_outlined),
               label: const Text('CONTINUE WITH GOOGLE'),
             ),
