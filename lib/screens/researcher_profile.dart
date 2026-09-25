@@ -1,7 +1,8 @@
 import 'dart:io';
-
+import 'package:firebase_auth/firebase_auth.dart' hide UserInfo;
 import 'package:floradex/models/user_info.dart';
 import 'package:floradex/screens/botanical_vault.dart';
+import 'package:floradex/services/auth_service.dart';
 import 'package:floradex/services/database_service.dart';
 import 'package:floradex/services/userProgress_service.dart';
 import 'package:floradex/services/user_service.dart';
@@ -44,6 +45,7 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
 
   final ImagePicker _imagePicker = ImagePicker();
   final UserService _userService = UserService();
+  final AuthService _authService = AuthService();
 
   final TextEditingController _nameController = TextEditingController();
 
@@ -72,6 +74,118 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
     _userRank = UserProgressService().getRankForProgress(
       widget.user.userProgress,
     );
+  }
+
+  Future<bool?> _showLogoutConfirmDialog() {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          backgroundColor: AppTheme.surfaceContainerLowest,
+          insetPadding: const EdgeInsets.symmetric(horizontal: AppTheme.space4),
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: AppTheme.onSurface, width: 2),
+            ),
+            padding: const EdgeInsets.all(AppTheme.space4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title - same style as lib/screens/researcher_profile.dart:238
+                Text(
+                  'CONFIRM LOGOUT',
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                    color: AppTheme.error, // red to signal destructive
+                    fontSize: 11,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.space3),
+                Text(
+                  'You will be signed out and need to sign in again to access your vault.',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppTheme.onSurface),
+                ),
+                const SizedBox(height: AppTheme.space6),
+                Row(
+                  children: [
+                    // CANCEL - same as lib/screens/researcher_profile.dart:295
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => Navigator.of(dialogContext).pop(false),
+                        child: Container(
+                          padding: const EdgeInsets.all(AppTheme.space4),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceContainerLow,
+                            border: Border.all(
+                              color: AppTheme.onSurface,
+                              width: 2,
+                            ),
+                          ),
+                          child: Text(
+                            'CANCEL',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(
+                                  color: AppTheme.onSurface,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.space3),
+                    // LOGOUT - same as SAVE button at lib/screens/researcher_profile.dart:335
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => Navigator.of(dialogContext).pop(true),
+                        child: Container(
+                          padding: const EdgeInsets.all(AppTheme.space4),
+                          decoration: BoxDecoration(
+                            color: AppTheme.error, // destructive
+                            border: Border.all(
+                              color: AppTheme.onSurface,
+                              width: 2,
+                            ),
+                          ),
+                          child: Text(
+                            'LOGOUT',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(
+                                  color: AppTheme.onPrimary,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _handleLogout() async {
+    final confirmed = await _showLogoutConfirmDialog();
+    if (confirmed != true) return;
+
+    try {
+      if (mounted) Navigator.of(context).pop();
+      await _authService.signOut();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Logout Failed: $e')));
+    }
   }
 
   Future<int> _loadScanCount() async {
@@ -725,6 +839,7 @@ class _ResearcherProfileScreenState extends State<ResearcherProfileScreen> {
               color: AppTheme.error,
               borderColor: AppTheme.error,
               trailingIcon: null,
+              onTap: _handleLogout,
             ),
           ],
         ),
